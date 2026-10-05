@@ -1,0 +1,10 @@
+<view class="pendulum" aria-label="节拍摆锤">
+  <view class="pendulum-track" style="left: {{trackStart}}px; width: {{trackWidth}}px"></view>
+  <view class="pendulum-motion" style="left: {{trackStart}}px; width: {{trackWidth}}px">
+    <view
+      class="pendulum-dot {{playing ? 'is-playing' : ''}}"
+      style="animation-duration: {{beatDurationMs}}ms"
+    >
+    </view>
+  </view>
+</view>

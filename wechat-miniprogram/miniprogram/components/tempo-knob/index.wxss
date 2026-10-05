@@ -1,0 +1,165 @@
+.knob-shell {
+  width: 236px;
+  height: 236px;
+  position: relative;
+  display: block;
+  z-index: 0;
+  overflow: visible;
+}
+
+.knob-face {
+  position: absolute;
+  left: 37px;
+  top: 37px;
+  width: 162px;
+  height: 162px;
+  border-radius: 50%;
+  background: transparent;
+  border: 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+  box-shadow: none;
+}
+
+.knob-marker {
+  position: absolute;
+  z-index: 5;
+  width: 5px;
+  top: 6px;
+  left: 115.5px;
+  height: 16px;
+  border-radius: 2px;
+  transform-origin: 2.5px 112px;
+  background: linear-gradient(180deg, #ffd88a, #b88a43);
+  box-shadow: none;
+  border: 0.5px solid #2c2b27;
+}
+
+.knob-marker.is-dragging {
+  width: 6px;
+  left: 115px;
+  transform-origin: 3px 112px;
+}
+
+.knob-top {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 2;
+  display: block;
+  width: 236px;
+  height: 236px;
+  pointer-events: none;
+}
+
+/* 光晕跟随指示条旋转，中心固定在表盘正上方的受光位置。 */
+.knob-glow {
+  position: absolute;
+  z-index: 1;
+  width: 48px;
+  height: 28px;
+  left: 94px;
+  top: 28px;
+  transform-origin: 24px 90px;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 195, 35, 0.38) 0%,
+    rgba(255, 195, 35, 0.16) 48%,
+    rgba(255, 195, 35, 0) 100%
+  );
+  filter: blur(5px);
+  opacity: 1;
+  pointer-events: none;
+  box-shadow: none;
+  mix-blend-mode: screen;
+}
+
+.knob-base {
+  position: absolute;
+  /* 外描边和下投影会越过 236px 画布边界，给 SVG 留出 4px 溢出区，
+     避免上下左右被 image 视口裁掉，同时保持圆心仍在 118px。 */
+  left: -4px;
+  top: -4px;
+  z-index: 0;
+  display: block;
+  width: 244px;
+  height: 248px;
+  pointer-events: none;
+}
+
+.knob-content {
+  position: static;
+  z-index: 1;
+  width: 144px;
+  height: 84px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
+.knob-control {
+  position: static;
+  width: 32px;
+  height: 48px;
+  flex: 0 0 32px;
+  color: #d7d4cc;
+  font-size: 24px;
+  line-height: 44px;
+  text-align: center;
+}
+
+.knob-value-group {
+  position: static;
+  width: 66px;
+  height: 84px;
+  flex: 0 0 66px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.tempo-marking {
+  display: block;
+  width: 66px;
+  height: 10px;
+  overflow: hidden;
+  color: #d7d4cc;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  line-height: 10px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.knob-value {
+  display: block;
+  width: 66px;
+  height: 36px;
+  margin-top: 6px;
+  color: #fff;
+  font-size: 36px;
+  font-weight: 900;
+  line-height: 36px;
+  text-align: center;
+}
+
+.knob-unit {
+  display: block;
+  width: 66px;
+  height: 14px;
+  margin-top: 6px;
+  color: #fff;
+  font-size: 14px;
+  letter-spacing: 0;
+  line-height: 14px;
+  text-align: center;
+}

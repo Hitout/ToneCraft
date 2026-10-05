@@ -1,0 +1,265 @@
+<view class="page-shell">
+  <view
+    class="mode-navigation"
+    style="padding-top: {{statusBarHeight}}px; height: {{navigationBarHeight}}px;"
+  >
+    <view class="mode-navigation-content">
+      <mode-switch id="mode-switch" selected="metronome" bind:change="onModeChange"></mode-switch>
+    </view>
+  </view>
+
+  <view class="content" style="padding-top: {{contentTop}}px;">
+    <view class="tempo-section">
+      <tempo-knob
+        id="tempo-knob"
+        bpm="{{bpm}}"
+        tempo-marking="{{tempoMarking}}"
+        bind:change="onKnobChange"
+        bind:edit="openBpm"
+        bind:decrease="decreaseBpm"
+        bind:increase="increaseBpm"
+      ></tempo-knob>
+    </view>
+
+    <view class="option-row">
+      <view class="option-card" data-type="signature" bindtap="openPicker" aria-label="节拍 {{timeSignature}}">
+        <text class="option-caption">节拍</text>
+        <view class="option-visual-slot">
+          <text class="option-value">{{timeSignature}}</text>
+        </view>
+      </view>
+      <view class="option-card" data-type="subdivision" bindtap="openPicker" aria-label="细分 {{subdivision}}">
+        <text class="option-caption">细分</text>
+        <view class="option-visual-slot">
+          <view class="subdivision-preview {{customSubdivisionEnabled ? '' : 'is-hidden'}}" aria-hidden="true">
+            <view
+              wx:for="{{subdivisionPreviewRows}}"
+              wx:for-item="row"
+              wx:for-index="rowIndex"
+              wx:key="rowIndex"
+              class="subdivision-preview-row"
+            >
+              <image
+                wx:for="{{row}}"
+                wx:for-item="item"
+                wx:for-index="itemIndex"
+                wx:key="index"
+                class="subdivision-preview-icon"
+                src="{{item.icon}}"
+                style="width: {{item.size}}px; height: {{item.size}}px;"
+                mode="aspectFit"
+              />
+            </view>
+          </view>
+          <image
+            class="option-icon subdivision-icon {{customSubdivisionEnabled ? 'is-hidden' : ''}}"
+            src="{{subdivisionIcon}}"
+            mode="aspectFit"
+            aria-hidden="true"
+          />
+        </view>
+      </view>
+      <view class="option-card" data-type="sound" bindtap="openPicker" aria-label="音色 {{sound}}">
+        <text class="option-caption">音色</text>
+        <view class="option-visual-slot">
+          <image class="option-icon" src="{{soundIcon}}" mode="aspectFit" aria-hidden="true" />
+        </view>
+      </view>
+      <view class="option-card" bindtap="tapTempo" aria-label="点击测速">
+        <text class="option-caption">TEMPO</text>
+        <view class="option-visual-slot">
+          <image class="option-icon" src="{{tempoIcon}}" mode="aspectFit" aria-hidden="true" />
+        </view>
+      </view>
+    </view>
+
+    <view class="transport-row">
+      <view class="transport-card trainer-card {{trainerActive ? 'is-enabled' : ''}}" bindtap="openTrainer" aria-label="速度训练 {{speedTrainerLabel}} {{trainerProgressLabel}}">
+        <view class="transport-caption-row">
+          <image class="trainer-direction-icon" src="{{trainerDirectionIcon}}" mode="aspectFit" aria-hidden="true" />
+          <text class="transport-caption">训练</text>
+        </view>
+        <text class="transport-value">{{speedTrainerLabel}}</text>
+        <text wx:if="{{trainerProgressLabel}}" class="transport-progress">{{trainerProgressLabel}}</text>
+      </view>
+      <view class="play-button" bindtap="togglePlayback" aria-label="{{playing ? '停止节拍器' : '开始节拍器'}}">
+        <image class="play-icon" src="{{transportIcon}}" mode="aspectFit" aria-hidden="true" />
+      </view>
+      <view class="transport-card" data-type="timer" bindtap="openPicker" aria-label="定时 {{timerValueLabel}}">
+        <view class="transport-caption-row">
+          <image class="transport-icon" src="{{timerIcon}}" mode="aspectFit" aria-hidden="true" />
+          <text class="transport-caption">定时</text>
+        </view>
+        <text class="transport-value">{{timerValueLabel}}</text>
+      </view>
+    </view>
+
+    <text wx:if="{{statusMessage}}" class="status-message">{{statusMessage}}</text>
+
+    <view class="beat-panel">
+      <view class="beat-grid">
+        <view
+          wx:for="{{beats}}"
+          wx:key="index"
+          class="beat-column {{item.active ? 'is-current' : ''}}"
+          data-index="{{index}}"
+          bindtap="cycleBeatStrength"
+          aria-label="第 {{index + 1}} 拍，{{item.label}}"
+        >
+          <view class="beat-column-surface {{beats.length > 4 ? 'has-slot-gap' : ''}}">
+            <view class="beat-fill strength-{{item.strength}}"></view>
+          </view>
+        </view>
+      </view>
+      <view class="pendulum-slot">
+        <pendulum
+          playing="{{playing}}"
+          beat-duration-ms="{{pendulumDurationMs}}"
+          beat-count="{{beats.length}}"
+        ></pendulum>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{sheet}}" class="sheet-backdrop" bindtap="closeSheet">
+    <view wx:if="{{sheet === 'number'}}" class="number-dialog" catchtap="noop">
+      <view class="sheet-header">
+        <text class="sheet-title">{{sheetTitle}}</text>
+      </view>
+      <view class="number-input-wrap">
+        <input class="number-input bpm-input" type="number" value="{{numberInput}}" bindinput="onNumberInput" bindconfirm="confirmNumber" focus="true" />
+        <text
+          wx:if="{{numberKind === 'bpm' || numberKind === 'trainerStart' || numberKind === 'trainerTarget' || numberKind === 'trainerStep'}}"
+          class="number-input-suffix"
+        >BPM</text>
+      </view>
+      <text wx:if="{{numberError}}" class="number-error">{{numberError}}</text>
+      <view class="number-actions">
+        <button class="secondary-button" bindtap="closeSheet">取消</button>
+        <button class="confirm-button" bindtap="confirmNumber">确定</button>
+      </view>
+    </view>
+
+      <view wx:elif="{{sheet}}" class="bottom-sheet {{sheet === 'timer' ? 'timer-sheet' : ''}}" catchtap="noop">
+        <view class="sheet-handle"></view>
+        <view wx:if="{{sheet === 'subdivision'}}" class="sheet-header subdivision-sheet-header">
+          <view class="subdivision-header-side subdivision-header-left">
+            <text
+              class="reset-subdivision {{customSubdivisionEnabled ? '' : 'is-disabled'}}"
+              bindtap="resetCustomSubdivision"
+              aria-label="重置自定义细分"
+            >重置</text>
+          </view>
+          <text class="sheet-title">细分</text>
+          <view class="subdivision-header-side subdivision-header-right">
+            <text class="custom-subdivision-label">自定义节奏</text>
+            <view
+              class="custom-subdivision-switch-wrap"
+              bindtap="toggleCustomSubdivision"
+              aria-label="自定义节奏"
+              aria-checked="{{customSubdivisionEnabled}}"
+            >
+              <view class="custom-subdivision-switch {{customSubdivisionEnabled ? 'is-enabled' : ''}}">
+                <view class="custom-subdivision-switch-thumb"></view>
+              </view>
+            </view>
+          </view>
+        </view>
+        <view wx:elif="{{sheet !== 'timer'}}" class="sheet-header">
+          <text class="sheet-title">{{sheetTitle}}</text>
+        </view>
+
+      <view wx:if="{{sheet === 'trainer'}}" class="trainer-editor">
+        <view class="trainer-fields">
+          <view class="trainer-stepper" data-kind="trainerStart" bindtap="openTrainerNumber">
+            <text class="trainer-field-label">起始 BPM</text>
+            <view class="trainer-stepper-controls">
+              <button class="step-button {{trainerStartCanDecrease ? '' : 'is-disabled'}}" data-field="trainerStartBpm" data-delta="-1" catchtap="adjustTrainer" aria-label="降低起始 BPM">−</button>
+              <text class="trainer-step-value">{{trainerStartBpm}}</text>
+              <button class="step-button {{trainerStartCanIncrease ? '' : 'is-disabled'}}" data-field="trainerStartBpm" data-delta="1" catchtap="adjustTrainer" aria-label="提高起始 BPM">＋</button>
+            </view>
+          </view>
+          <view class="trainer-stepper" data-kind="trainerTarget" bindtap="openTrainerNumber">
+            <text class="trainer-field-label">目标 BPM</text>
+            <view class="trainer-stepper-controls">
+              <button class="step-button {{trainerTargetCanDecrease ? '' : 'is-disabled'}}" data-field="trainerTargetBpm" data-delta="-1" catchtap="adjustTrainer" aria-label="降低目标 BPM">−</button>
+              <text class="trainer-step-value">{{trainerTargetBpm}}</text>
+              <button class="step-button {{trainerTargetCanIncrease ? '' : 'is-disabled'}}" data-field="trainerTargetBpm" data-delta="1" catchtap="adjustTrainer" aria-label="提高目标 BPM">＋</button>
+            </view>
+          </view>
+          <view class="trainer-compact-row">
+            <view class="trainer-compact" data-kind="trainerStep" bindtap="openTrainerNumber">
+              <view class="compact-controls">
+                <button class="step-button {{trainerStepCanDecrease ? '' : 'is-disabled'}}" data-field="trainerStepBpm" data-delta="-1" catchtap="adjustTrainer" aria-label="减少每次增加">−</button>
+                <text class="trainer-step-value">{{trainerStepBpm}} BPM</text>
+                <button class="step-button {{trainerStepCanIncrease ? '' : 'is-disabled'}}" data-field="trainerStepBpm" data-delta="1" catchtap="adjustTrainer" aria-label="增加每次增加">＋</button>
+              </view>
+            </view>
+            <view class="trainer-compact" data-kind="trainerBars" bindtap="openTrainerNumber">
+              <view class="compact-controls">
+                <button class="step-button {{trainerBarsCanDecrease ? '' : 'is-disabled'}}" data-field="trainerBarsPerStep" data-delta="-1" catchtap="adjustTrainer" aria-label="减少每档小节">−</button>
+                <text class="trainer-step-value">{{trainerBarsPerStep}} 小节</text>
+                <button class="step-button {{trainerBarsCanIncrease ? '' : 'is-disabled'}}" data-field="trainerBarsPerStep" data-delta="1" catchtap="adjustTrainer" aria-label="增加每档小节">＋</button>
+              </view>
+            </view>
+          </view>
+        </view>
+        <text class="trainer-summary">{{trainerSummaryLabel}}</text>
+        <view class="trainer-actions">
+          <button
+            wx:if="{{trainerCanDisable}}"
+            class="secondary-button"
+            bindtap="disableTrainer"
+            aria-label="关闭速度训练"
+          >关闭</button>
+          <button class="confirm-button" bindtap="saveTrainer" aria-label="开始速度训练">开始</button>
+        </view>
+      </view>
+
+      <view wx:elif="{{sheet === 'signature' || sheet === 'subdivision'}}" class="subdivision-editor">
+        <view class="custom-subdivision-section {{customSubdivisionEnabled && sheet === 'subdivision' ? '' : 'is-hidden'}}">
+          <view
+            class="beat-subdivision-selector"
+          >
+            <view
+              wx:for="{{beatSubdivisionRows}}"
+              wx:for-item="row"
+              wx:for-index="rowIndex"
+              wx:key="rowIndex"
+              class="beat-subdivision-row"
+            >
+              <view
+                wx:for="{{row}}"
+                wx:for-item="item"
+                wx:for-index="itemIndex"
+                wx:key="index"
+                class="beat-subdivision-item {{selectedBeatIndex === item.index ? 'is-selected' : ''}}"
+                style="width: {{beatSelectorItemWidth}};"
+                data-index="{{item.index}}"
+                bindtap="selectCustomBeat"
+                aria-label="{{item.label}}"
+              >
+                <text class="beat-subdivision-number">{{item.index + 1}}</text>
+                <image class="beat-subdivision-icon" src="{{item.icon}}" mode="aspectFit" aria-hidden="true" />
+              </view>
+            </view>
+          </view>
+          <view class="dashed-divider"></view>
+        </view>
+        <view class="option-grid {{optionLayout}}">
+          <view wx:for="{{options}}" wx:key="value" class="grid-option {{item.selected ? 'is-selected' : ''}}" data-value="{{item.value}}" bindtap="selectOption" aria-label="{{item.label}}">
+            <image wx:if="{{item.icon}}" class="grid-option-icon" src="{{item.icon}}" mode="aspectFit" aria-hidden="true" />
+            <text wx:else>{{item.label}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view wx:else class="option-list {{sheet === 'timer' ? 'timer-list' : ''}}">
+        <view wx:for="{{options}}" wx:key="value" class="sheet-option {{item.selected ? 'is-selected' : ''}}" data-value="{{item.value}}" bindtap="selectOption" aria-label="{{item.label}}">
+          <text>{{item.label}}</text>
+          <text wx:if="{{sheet === 'timer' && item.selected}}" class="selected-mark">✓</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

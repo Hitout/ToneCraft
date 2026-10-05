@@ -1,0 +1,21 @@
+{
+  "pages": [
+    "pages/metronome/metronome",
+    "pages/tuner/tuner"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#17130f",
+    "navigationBarTextStyle": "white",
+    "navigationBarTitleText": "节拍器",
+    "backgroundColor": "#17130f",
+    "backgroundTextStyle": "dark"
+  },
+  "permission": {
+    "scope.record": {
+      "desc": "用于实时识别音高，帮助你完成调音"
+    }
+  },
+  "style": "v2",
+  "lazyCodeLoading": "requiredComponents",
+  "sitemapLocation": "sitemap.json"
+}

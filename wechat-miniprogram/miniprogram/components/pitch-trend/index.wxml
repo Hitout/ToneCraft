@@ -1,0 +1,26 @@
+<view class="trend-card">
+  <view class="trend-chart" id="trend-chart">
+    <view
+      wx:for="{{gridLines}}"
+      wx:key="value"
+      class="trend-grid-line"
+      style="top: {{item.top}}px;"
+    ></view>
+    <text
+      wx:for="{{gridLines}}"
+      wx:key="value"
+      class="trend-grid-label"
+      style="top: {{item.labelTop}}px;"
+    >{{item.label}}</text>
+    <view
+      class="trend-in-tune-band"
+      style="top: {{inTuneBandTop}}px; height: {{inTuneBandHeight}}px;"
+    ></view>
+    <view
+      wx:for="{{segments}}"
+      wx:key="index"
+      class="trend-segment"
+      style="left: {{item.left}}px; top: {{item.top}}px; width: {{item.width}}px; background: {{item.color}}; transform: rotate({{item.angle}}deg);"
+    ></view>
+  </view>
+</view>

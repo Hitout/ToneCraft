@@ -1,0 +1,111 @@
+<view class="page-shell">
+  <view
+    class="mode-navigation"
+    style="padding-top: {{statusBarHeight}}px; height: {{navigationBarHeight}}px;"
+  >
+    <view class="mode-navigation-content">
+      <mode-switch id="mode-switch" selected="tuner" bind:change="onModeChange"></mode-switch>
+    </view>
+  </view>
+
+  <view class="content" style="padding-top: {{contentTop}}px;">
+    <view class="selector-card">
+      <view class="selector-cell" bindtap="openInstrumentSheet" aria-label="乐器，{{instrumentLabel}}">
+        <image class="selector-icon" src="../../assets/icons/guitar.svg" mode="aspectFit" aria-hidden="true" />
+        <view class="selector-text">
+          <text class="selector-caption">乐器</text>
+          <text class="selector-value">{{instrumentLabel}}</text>
+        </view>
+        <text class="selector-chevron" aria-hidden="true">⌄</text>
+      </view>
+      <view class="selector-divider"></view>
+      <view class="selector-cell" bindtap="openPresetSheet" aria-label="调弦方式，{{presetLabel}}">
+        <image class="selector-icon" src="../../assets/icons/tuning.svg" mode="aspectFit" aria-hidden="true" />
+        <view class="selector-text">
+          <text class="selector-caption">调弦方式</text>
+          <text class="selector-value">{{presetLabel}}</text>
+        </view>
+        <text class="selector-chevron" aria-hidden="true">⌄</text>
+      </view>
+    </view>
+
+    <view wx:if="{{showStatusBanner}}" class="status-banner">
+      <image class="status-icon" src="../../assets/icons/info-outline.svg" mode="aspectFit" aria-hidden="true" />
+      <text class="status-copy">{{statusMessage}}</text>
+      <view wx:if="{{canRetry}}" class="status-action" bindtap="handleStatusAction">
+        <text>{{statusActionLabel}}</text>
+      </view>
+    </view>
+
+    <view class="gauge-wrap">
+      <tuner-gauge
+        note-name="{{noteName}}"
+        octave="{{octave}}"
+        cents="{{cents}}"
+        active="{{gaugeActive}}"
+        reading-color="{{readingColor}}"
+        frequency-label="{{frequencyLabel}}"
+      ></tuner-gauge>
+    </view>
+
+    <view class="trend-wrap">
+      <pitch-trend values="{{trendSamples}}"></pitch-trend>
+    </view>
+
+    <view class="summary-card">
+      <view wx:if="{{isChromatic}}" class="chromatic-summary">
+        <view class="chromatic-symbol">♯</view>
+        <view class="chromatic-copy">
+          <text class="chromatic-title">半音阶调音</text>
+          <text class="summary-description">自动识别最接近的十二平均律音符</text>
+          <text class="chromatic-frequency">{{targetFrequencyLabel}}</text>
+        </view>
+      </view>
+
+      <block wx:else>
+        <view class="summary-heading">
+          <text class="summary-title">{{summaryTitle}}</text>
+          <view class="automatic-control" bindtap="toggleAutomatic" aria-label="自动识别琴弦">
+            <text class="automatic-label">自动</text>
+            <view class="automatic-switch {{automaticDetection ? 'is-on' : ''}}">
+              <view class="automatic-thumb"></view>
+            </view>
+          </view>
+        </view>
+        <view class="target-row">
+          <view
+            wx:for="{{targets}}"
+            wx:key="index"
+            class="target-item"
+            data-index="{{index}}"
+            bindtap="selectTarget"
+            aria-label="{{item.displayName}}，{{item.frequencyLabel}}"
+          >
+            <view class="target-note {{item.highlighted ? 'is-highlighted' : ''}}" style="color: {{item.color}}; border-color: {{item.borderColor}}; background: {{item.backgroundColor}};">
+              <view class="target-note-label">
+                <text class="target-note-name">{{item.noteName}}</text><text class="target-octave">{{item.octave}}</text>
+              </view>
+            </view>
+            <text class="target-frequency" style="color: {{item.color}};">{{item.frequencyLabel}}</text>
+          </view>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <view wx:if="{{sheet}}" class="sheet-backdrop" bindtap="closeSheet">
+    <view class="bottom-sheet" catchtap="noop">
+      <view class="sheet-handle"></view>
+      <view class="sheet-header">
+        <text class="sheet-title">{{sheetTitle}}</text>
+      </view>
+      <view
+        wx:for="{{sheetOptions}}"
+        wx:key="value"
+        class="sheet-option {{item.selected ? 'is-selected' : ''}}"
+        data-value="{{item.value}}"
+        bindtap="selectSheetOption"
+      ><text>{{item.label}}</text></view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,78 @@
+.gauge-surface {
+  position: relative;
+  width: 100%;
+  height: 210px;
+}
+
+.gauge-canvas {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 210px;
+}
+
+.gauge-knob-shell {
+  position: absolute;
+  z-index: 1;
+  width: 43px;
+  height: 43px;
+  pointer-events: none;
+}
+
+.gauge-reading {
+  position: absolute;
+  /* 微信大字号字形的可见顶部偏低，整体上移以保持视觉对齐。 */
+  top: 88px;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  opacity: 0.55;
+  white-space: nowrap;
+}
+
+.gauge-reading.is-active { opacity: 1; }
+
+.gauge-note {
+  font-size: 96px;
+  font-weight: 800;
+  line-height: 0.9;
+}
+
+.gauge-sharp {
+  margin-top: -17px;
+  margin-left: -3px;
+  align-self: flex-start;
+  font-size: 48px;
+  font-weight: 400;
+  line-height: 0.9;
+}
+
+.gauge-octave {
+  margin-left: 1px;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.gauge-cents {
+  margin-left: 7px;
+  font-size: 30px;
+  font-weight: 700;
+}
+
+.gauge-frequency {
+  position: absolute;
+  /* 微信文字行盒较高，Hz 需要下移才能保留视觉间距。 */
+  top: 180px;
+  left: 0;
+  right: 0;
+  color: #f4e9d2;
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 22px;
+  text-align: center;
+}

@@ -1,0 +1,43 @@
+.pendulum {
+  width: 100%;
+  height: 16px;
+  position: relative;
+}
+
+.pendulum-track {
+  position: absolute;
+  top: 7px;
+  height: 2px;
+  border-radius: 2px;
+  background: #35302b;
+}
+
+.pendulum-motion {
+  position: absolute;
+  top: 0;
+  height: 16px;
+}
+
+.pendulum-dot {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  left: 0;
+  top: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ffe4ab 0 18%, #ffd68a 48%, #da9a33 100%);
+  box-shadow: 0 0 14px rgba(255, 198, 90, 0.65);
+  overflow: visible;
+}
+
+.pendulum-dot.is-playing {
+  animation-name: pendulum-swing;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+
+@keyframes pendulum-swing {
+  from { left: 0; }
+  to { left: calc(100% - 16px); }
+}

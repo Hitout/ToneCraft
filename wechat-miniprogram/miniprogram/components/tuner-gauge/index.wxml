@@ -1,0 +1,18 @@
+<view class="gauge-surface">
+  <canvas class="gauge-canvas" canvas-id="gauge-canvas" id="gauge-canvas"></canvas>
+  <image
+    wx:if="{{knobVisible}}"
+    class="gauge-knob-shell"
+    style="left: {{knobLeft}}px; top: {{knobTop}}px; opacity: {{active ? 1 : 0.34}};"
+    src="../../assets/icons/tuner-knob-shell.svg"
+    mode="aspectFit"
+    aria-hidden="true"
+  />
+  <view class="gauge-reading {{active ? 'is-active' : ''}}">
+    <text class="gauge-note" style="color: {{readingColor}};">{{noteBase}}</text>
+    <text wx:if="{{hasSharp}}" class="gauge-sharp" style="color: {{readingColor}};">♯</text>
+    <text class="gauge-octave" style="color: {{readingColor}};">{{octave}}</text>
+    <text wx:if="{{active}}" class="gauge-cents" style="color: {{readingColor}};">{{centsLabel}}</text>
+  </view>
+  <text class="gauge-frequency">{{frequencyLabel}}</text>
+</view>

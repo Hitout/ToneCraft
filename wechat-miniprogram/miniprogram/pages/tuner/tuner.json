@@ -1,0 +1,8 @@
+{
+  "usingComponents": {
+    "mode-switch": "/components/mode-switch/index",
+    "tuner-gauge": "/components/tuner-gauge/index",
+    "pitch-trend": "/components/pitch-trend/index"
+  },
+  "navigationStyle": "custom"
+}

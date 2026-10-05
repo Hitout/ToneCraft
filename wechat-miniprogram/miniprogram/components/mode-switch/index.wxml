@@ -1,0 +1,23 @@
+<view class="mode-switch-track" role="tablist" aria-label="功能切换">
+  <view class="mode-switch-thumb {{selected === 'metronome' ? 'is-metronome' : 'is-tuner'}}" aria-hidden="true"></view>
+  <view
+    class="mode-target mode-target-metronome {{selected === 'metronome' ? 'is-selected' : 'is-idle'}}"
+    data-mode="metronome"
+    bindtap="selectMode"
+    role="tab"
+    aria-selected="{{selected === 'metronome'}}"
+    aria-label="节拍器"
+  >
+    <text>节拍器</text>
+  </view>
+  <view
+    class="mode-target mode-target-tuner {{selected === 'tuner' ? 'is-selected' : 'is-idle'}}"
+    data-mode="tuner"
+    bindtap="selectMode"
+    role="tab"
+    aria-selected="{{selected === 'tuner'}}"
+    aria-label="调音器"
+  >
+    <text>调音器</text>
+  </view>
+</view>

@@ -1,0 +1,9 @@
+{
+  "usingComponents": {
+    "tempo-knob": "/components/tempo-knob/index",
+    "pendulum": "/components/pendulum/index",
+    "mode-switch": "/components/mode-switch/index"
+  },
+  "navigationStyle": "custom",
+  "disableScroll": true
+}

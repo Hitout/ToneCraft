@@ -1,0 +1,17 @@
+{
+  "name": "tonecraft-wx-program",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ToneCraft 微信小程序节拍器",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "miniprogram-api-typings": "^3.12.0",
+    "typescript": "^5.0.0",
+    "vitest": "^3.0.0"
+  }
+}

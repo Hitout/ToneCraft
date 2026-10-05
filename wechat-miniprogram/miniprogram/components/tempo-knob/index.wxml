@@ -1,0 +1,40 @@
+<view
+  class="knob-shell"
+  bindtouchstart="onTouchStart"
+  bindtouchmove="onTouchMove"
+  bindtouchend="onTouchEnd"
+  bindtouchcancel="onTouchCancel"
+  aria-label="BPM 旋钮，当前 {{bpm}} BPM，可拖动调整，点击中心数字编辑"
+>
+  <!-- 底盘使用静态 SVG，拨针和光晕保留为普通 WXML 动态层，弹窗可以正常覆盖这些层。 -->
+  <image class="knob-base" src="../../assets/images/tempo-knob-base.svg" mode="aspectFit" aria-hidden="true" />
+  <view class="knob-glow" style="transform: rotate({{angle}}deg)"></view>
+  <view class="knob-marker {{isDragging ? 'is-dragging' : ''}}" style="transform: rotate({{angle}}deg)"></view>
+  <!-- 内盘放在光晕之后，遮住进入盘面的光晕。 -->
+  <image class="knob-top" src="../../assets/images/tempo-knob-top.svg" mode="aspectFit" aria-hidden="true" />
+  <view class="knob-face">
+    <view class="knob-content">
+      <view
+        class="knob-control"
+        bindtouchstart="onDecreaseStart"
+        bindtouchend="onPressEnd"
+        bindtouchcancel="onPressEnd"
+        bindtap="onDecrease"
+        aria-label="BPM -1"
+      >−</view>
+      <view class="knob-value-group" bindtap="onTap" aria-label="{{bpm}} BPM，点击编辑">
+        <text class="tempo-marking">{{tempoMarking}}</text>
+        <text class="knob-value">{{bpm}}</text>
+        <text class="knob-unit">BPM</text>
+      </view>
+      <view
+        class="knob-control"
+        bindtouchstart="onIncreaseStart"
+        bindtouchend="onPressEnd"
+        bindtouchcancel="onPressEnd"
+        bindtap="onIncrease"
+        aria-label="BPM +1"
+      >+</view>
+    </view>
+  </view>
+</view>
