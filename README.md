@@ -28,4 +28,4 @@ Fork 本仓库后，请在 `wechat-miniprogram/project.config.json` 中替换为
 
 ## 许可证
 
-`wechat-miniprogram/` 下的源码、测试、配置文件和 `assets/icons2/` 公开替代图标采用 Apache-2.0，具体授权范围和排除项见 [`LICENSE`](LICENSE) 与 [`LICENSE-SCOPE.md`](LICENSE-SCOPE.md)。ToneCraft 的原始品牌名称、Logo、应用图标、品牌视觉资产及 `docs/` 法律页面不在 Apache-2.0 授权范围内。
+ToneCraft 微信小程序源码项目采用 Apache-2.0。仓库中的源码、测试、配置文件和 `assets/icons2/` 公开替代图标均在授权范围内；原始图标、未明确授权的视觉素材、ToneCraft 品牌与商标，以及 `docs/` 法律页面不在授权范围内。具体范围见 [`LICENSE`](LICENSE) 与 [`LICENSE-SCOPE.md`](LICENSE-SCOPE.md)。
