@@ -1,4 +1,20 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
-  <circle cx="60" cy="60" r="34" fill="#4A5568" stroke="#F4F7FA" stroke-width="3"/>
-  <path d="M60 36v24l13 8" stroke="#F4F7FA" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="236" height="236" viewBox="0 0 236 236">
+  <defs>
+    <linearGradient id="top" x1="73.5202" y1="45.72307" x2="169.827" y2="63.6209" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#272623" />
+      <stop offset="1" stop-color="#1C1B17" />
+    </linearGradient>
+    <linearGradient id="top-outline" x1="118" y1="37" x2="118" y2="199" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3B3930" />
+      <stop offset="1" stop-color="#3A352B" />
+    </linearGradient>
+    <linearGradient id="top-highlight" x1="131" y1="50.5" x2="132" y2="159.5" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3C3935" />
+      <stop offset="1" stop-color="#1C1B17" stop-opacity="0" />
+    </linearGradient>
+  </defs>
+
+  <circle cx="118" cy="118" r="81" fill="url(#top)" />
+  <circle cx="118" cy="118" r="80.25" fill="none" stroke="url(#top-outline)" stroke-width="1.5" />
+  <circle cx="118.5" cy="117.5" r="75.5" fill="url(#top-highlight)" />
 </svg>

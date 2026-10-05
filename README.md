@@ -28,14 +28,4 @@ Fork 本仓库后，请在 `wechat-miniprogram/project.config.json` 中替换为
 
 ## 许可证
 
-`wechat-miniprogram/` 下的源码、测试、配置文件和公开替代素材采用 Apache-2.0，具体授权范围和排除项见 [`LICENSE`](LICENSE) 与 [`LICENSE-SCOPE.md`](LICENSE-SCOPE.md)。ToneCraft 的原始品牌名称、Logo、应用图标、品牌视觉资产及 `docs/` 法律页面不在 Apache-2.0 授权范围内。
-
-## 私有素材发布
-
-公开仓库使用替代图标。正式发布小程序时，可以将原始素材放在仓库外的 `ToneCraftPrivateAssets/` 目录，然后运行：
-
-```bash
-./tools/prepare-miniprogram-release.sh
-```
-
-脚本会在仓库外生成 `ToneCraftMiniProgramRelease/`，将原始素材注入到相同路径中。请使用生成目录发布，不要把生成目录或其中的私有素材提交回本仓库。
+`wechat-miniprogram/` 下的源码、测试、配置文件和 `assets/icons2/` 公开替代图标采用 Apache-2.0，具体授权范围和排除项见 [`LICENSE`](LICENSE) 与 [`LICENSE-SCOPE.md`](LICENSE-SCOPE.md)。ToneCraft 的原始品牌名称、Logo、应用图标、品牌视觉资产及 `docs/` 法律页面不在 Apache-2.0 授权范围内。
