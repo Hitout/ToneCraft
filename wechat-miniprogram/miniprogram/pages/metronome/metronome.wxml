@@ -111,7 +111,7 @@
           </view>
         </view>
       </view>
-      <view class="pendulum-slot">
+      <view class="beat-slider-slot">
         <pendulum
           playing="{{playing}}"
           beat-duration-ms="{{pendulumDurationMs}}"

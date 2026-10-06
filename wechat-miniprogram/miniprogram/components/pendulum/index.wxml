@@ -1,8 +1,8 @@
-<view class="pendulum" aria-label="节拍摆锤">
-  <view class="pendulum-track" style="left: {{trackStart}}px; width: {{trackWidth}}px"></view>
-  <view class="pendulum-motion" style="left: {{trackStart}}px; width: {{trackWidth}}px">
+<view class="beat-slider" aria-label="节拍滑块">
+  <view class="slider-track" style="left: {{trackStart}}px; width: {{trackWidth}}px"></view>
+  <view class="slider-motion" style="left: {{trackStart}}px; width: {{trackWidth}}px">
     <view
-      class="pendulum-dot {{playing ? 'is-playing' : ''}}"
+      class="slider-thumb {{playing ? 'is-playing' : ''}}"
       style="animation-duration: {{beatDurationMs}}ms"
     >
     </view>

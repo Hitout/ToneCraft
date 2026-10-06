@@ -2,7 +2,7 @@
   "name": "tonecraft-wx-program",
   "version": "0.1.0",
   "private": true,
-  "description": "ToneCraft 微信小程序节拍器",
+  "description": "ToneCraft 微信小程序（节拍器与调音器）",
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",

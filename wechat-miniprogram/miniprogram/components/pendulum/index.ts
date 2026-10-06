@@ -33,7 +33,7 @@ Component({
   methods: {
     measureTrack() {
       this.createSelectorQuery()
-        .select('.pendulum')
+        .select('.beat-slider')
         .boundingClientRect((rect) => {
           if (rect === null) return;
           const width = rect.width;

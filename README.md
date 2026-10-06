@@ -17,7 +17,13 @@ npm run typecheck
 npm test
 ```
 
-Fork 本仓库后，请在 `wechat-miniprogram/project.config.json` 中替换为你自己的 AppID。AppID 不是 AppSecret，任何发布或开发权限仍由微信公众平台账号控制。
+可直接在微信中搜索“**音匠节拍器**”或“**音匠调音器**”使用。
+
+### 页面预览
+
+![节拍器页面](wechat-miniprogram/screenshots/metronome.png)
+
+![调音器页面](wechat-miniprogram/screenshots/tuner.png)
 
 ## 公开页面
 

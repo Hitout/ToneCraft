@@ -8,3 +8,6 @@ project.private.config.json
 
 # 原始小程序图标仅保留在本地，不提交到公开仓库。
 /wechat-miniprogram/miniprogram/assets/icons/
+
+# Flutter Android 私有项目独立维护，不提交到公开仓库。
+/ToneCraftApp/

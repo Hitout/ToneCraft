@@ -457,8 +457,8 @@
 .beat-panel {
   position: relative;
   width: 100%;
-  /* 底部反馈按钮在小程序首期范围外，面板收至摆锤下方的安全留白。 */
-  height: 173px;
+  /* 底部反馈按钮在小程序首期范围外，面板下边界为滑块保留安全留白。 */
+  height: 181px;
   box-sizing: border-box;
   margin: 19px auto 0;
   padding: 0;
@@ -537,13 +537,13 @@
    容器级琥珀底色，避免亮起时在柱子外再出现一块黄色背景。 */
 .beat-column.is-current { background: transparent; }
 
-.pendulum-slot {
+.beat-slider-slot {
   position: absolute;
   left: 11.5px;
   right: 11.5px;
-  /* 摆锤与节拍网格共用同一节拍可用区，左右边距保持一致。 */
+  /* 滑块与节拍网格共用同一节拍可用区，左右边距保持一致。 */
   top: 145px;
-  height: 16px;
+  height: 24px;
 }
 
 /* 选择面板与页面其他网格、列表使用一致的尺寸基准。 */
