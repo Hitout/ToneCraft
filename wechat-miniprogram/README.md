@@ -9,7 +9,7 @@ ToneCraft 的微信小程序版本，包含节拍器与调音器，采用深色�
 3. 使用你有权限管理的 AppID，导入后勾选“使用 npm 模块”。
 4. 运行 `npm run typecheck` 和 `npm test` 做本地检查。
 
-公开仓库不提交 `miniprogram/assets/icons/` 原始图标目录，而是提供 `miniprogram/assets/icons2/` 作为占位素材。首次启动项目且本地没有授权的 `icons` 目录时，请先将 `icons2` 重命名为 `icons`；如果你已有私有或自行制作的 `icons` 目录，请保留现有目录，不要覆盖原始素材。
+公开仓库不提交 `miniprogram/assets/icons/` 原始图标目录，而是提供 `miniprogram/assets/icons2/` 作为公开替代素材。首次启动项目且本地没有授权的 `icons` 目录时，请先将 `icons2` 重命名为 `icons`；如果你已有私有或自行制作的 `icons` 目录，请保留现有目录，不要覆盖原始素材。
 
 ## 音频实现
 
