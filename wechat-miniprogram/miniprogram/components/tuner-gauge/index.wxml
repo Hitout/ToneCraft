@@ -11,7 +11,7 @@
   <view class="gauge-reading {{active ? 'is-active' : ''}}">
     <text class="gauge-note" style="color: {{readingColor}};">{{noteBase}}</text>
     <text wx:if="{{hasSharp}}" class="gauge-sharp" style="color: {{readingColor}};">♯</text>
-    <text class="gauge-octave" style="color: {{readingColor}};">{{octave}}</text>
+    <text wx:if="{{hasReading}}" class="gauge-octave" style="color: {{readingColor}};">{{octave}}</text>
     <text wx:if="{{active}}" class="gauge-cents" style="color: {{readingColor}};">{{centsLabel}}</text>
   </view>
   <text class="gauge-frequency">{{frequencyLabel}}</text>
