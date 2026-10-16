@@ -3,7 +3,7 @@
   <view class="slider-motion" style="left: {{trackStart}}px; width: {{trackWidth}}px">
     <view
       class="slider-thumb {{playing ? 'is-playing' : ''}}"
-      style="animation-duration: {{beatDurationMs}}ms"
+      style="animation-name: {{animationName}}; animation-duration: {{animationDurationMs}}ms; animation-delay: {{animationDelayMs}}ms"
     >
     </view>
   </view>

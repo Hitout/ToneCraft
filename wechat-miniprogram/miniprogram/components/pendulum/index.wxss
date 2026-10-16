@@ -31,13 +31,17 @@
 }
 
 .slider-thumb.is-playing {
-  animation-name: slider-slide;
   animation-timing-function: ease-in-out;
   animation-iteration-count: infinite;
   animation-direction: alternate;
 }
 
-@keyframes slider-slide {
+@keyframes slider-slide-a {
+  from { left: 0; }
+  to { left: calc(100% - 16px); }
+}
+
+@keyframes slider-slide-b {
   from { left: 0; }
   to { left: calc(100% - 16px); }
 }
