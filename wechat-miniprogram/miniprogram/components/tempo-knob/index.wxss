@@ -7,6 +7,22 @@
   overflow: visible;
 }
 
+.knob-dial {
+  position: absolute;
+  width: 236px;
+  height: 236px;
+  top: 50%;
+  left: 50%;
+  margin-top: -118px;
+  margin-left: -118px;
+}
+
+/* 外层同步占据放大后的尺寸，圆环命中范围按外层实测宽度计算。 */
+@media (min-width: 600px) {
+  .knob-shell { width: 330.4px; height: 330.4px; }
+  .knob-dial { transform: scale(1.4); }
+}
+
 .knob-face {
   position: absolute;
   left: 37px;

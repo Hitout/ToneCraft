@@ -260,7 +260,7 @@
   max-width: 430px;
   box-sizing: border-box;
   margin: 0 auto;
-  padding: 70px 22px 20px;
+  padding: 70px 22px calc(20px + env(safe-area-inset-bottom));
 }
 
 .mode-navigation {
@@ -1119,4 +1119,59 @@ button::after {
   .option-card { flex-basis: calc((100% - 36px) / 4); }
   .transport-card { flex-basis: 100px; width: 100px; }
   .transport-value { font-size: 22px; }
+}
+
+@media (min-width: 600px) {
+  .option-row { margin-top: 32px; }
+  .option-card { height: 100px; flex-basis: calc((100% - 60px) / 4); }
+  .option-caption { height: 20px; font-size: 15px; line-height: 20px; }
+  .option-visual-slot { height: 48px; margin-top: 6px; }
+  .option-icon, .subdivision-icon { width: 42px; height: 42px; }
+  .option-value { font-size: 28px; line-height: 32px; }
+  .subdivision-preview { top: 5px; transform: translateX(-50%) scale(1.25); }
+
+  .transport-row { margin-top: 20px; }
+  .transport-card { flex-basis: 180px; width: 180px; height: 84px; }
+  .transport-caption-row { height: 22px; gap: 6px; }
+  .transport-caption { font-size: 16px; }
+  .transport-value { max-width: 164px; font-size: 19px; line-height: 24px; }
+  .transport-progress { font-size: 13px; line-height: 16px; }
+  .trainer-direction-icon, .transport-icon { width: 22px; height: 22px; }
+  .play-button { flex-basis: 94px; width: 94px; height: 94px; }
+  .play-icon { width: 94px; height: 94px; }
+  .status-message { font-size: 16px; }
+
+  .beat-panel { height: 225px; margin-top: 28px; }
+  .beat-grid { top: 14px; height: 166px; }
+  .beat-column, .beat-column-surface { height: 166px; }
+  .beat-fill.strength-accent { height: 164px; }
+  .beat-fill.strength-secondary { height: 109px; }
+  .beat-fill.strength-normal { height: 55px; }
+  .beat-slider-slot { top: 188px; }
+
+  .grid-option { height: 56px; font-size: 18px; }
+  .grid3 .grid-option, .grid4 .grid-option { height: 56px; }
+  .grid-option-icon { width: 44px; height: 44px; }
+  .trainer-field-label, .trainer-summary { font-size: 15px; }
+}
+
+/* 宽窗口将旋钮与控制区并排，避免单列内容只占屏幕中央。 */
+@media (min-width: 960px) {
+  .page-shell .content {
+    max-width: 1200px;
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    grid-template-areas: "tempo options" "tempo transport" "tempo beats" "status status";
+    gap: 24px 40px;
+    align-content: center;
+    align-items: center;
+  }
+
+  .tempo-section { grid-area: tempo; }
+  .option-row { grid-area: options; margin-top: 0; }
+  .transport-row { grid-area: transport; margin-top: 0; gap: 16px; }
+  .transport-card { flex: 1; min-width: 0; }
+  .beat-panel { grid-area: beats; margin-top: 0; }
+  .status-message { grid-area: status; margin-top: 0; }
 }

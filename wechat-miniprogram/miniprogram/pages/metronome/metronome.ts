@@ -385,6 +385,10 @@ Page({
     this.unsubscribe = this.model.subscribe((state) => this.renderState(state));
   },
 
+  onResize() {
+    this.setData(customNavigationLayout());
+  },
+
   onHide() {
     // 模式切换前已经主动完成清理，避免路由交接期间重复触发状态更新。
     if (!this.leavingForModeChange) this.model?.onHide();

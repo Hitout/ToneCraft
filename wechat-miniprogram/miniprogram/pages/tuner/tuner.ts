@@ -219,6 +219,10 @@ Page({
     this.render();
   },
 
+  onResize() {
+    this.setData(customNavigationLayout());
+  },
+
   onReady() {
     this.pageReady = true;
     this.schedulePermissionAndStart();

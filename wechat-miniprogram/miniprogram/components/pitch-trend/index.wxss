@@ -54,3 +54,9 @@
   border-radius: 2px;
   transform-origin: left center;
 }
+
+@media (min-width: 600px) {
+  .trend-card { height: 164px; padding: 18px 16px; }
+  .trend-chart { height: 126px; }
+  .trend-grid-label { font-size: 10px; }
+}

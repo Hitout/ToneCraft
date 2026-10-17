@@ -1,3 +1,5 @@
+export {};
+
 interface RepeatTimers {
   delay: ReturnType<typeof setTimeout> | undefined;
   interval: ReturnType<typeof setInterval> | undefined;
@@ -6,6 +8,7 @@ interface RepeatTimers {
 interface KnobRuntime {
   centerX: number;
   centerY: number;
+  scale: number;
   lastAngle: number | null;
   dragBpm: number | null;
   lastEmittedBpm: number | null;
@@ -27,6 +30,7 @@ function runtimeFor(component: object): KnobRuntime {
   const created: KnobRuntime = {
     centerX: 0,
     centerY: 0,
+    scale: 1,
     lastAngle: null,
     dragBpm: null,
     lastEmittedBpm: null,
@@ -86,6 +90,18 @@ Component({
     },
   },
 
+  pageLifetimes: {
+    resize() {
+      // 窗口变化后旧圆心和触摸半径失效，先结束拖动再读取新布局。
+      this.stopRepeat();
+      this.onTouchCancel();
+      const runtime = runtimeFor(this);
+      runtime.centerX = 0;
+      runtime.centerY = 0;
+      wx.nextTick(() => this.measureCenter());
+    },
+  },
+
   methods: {
     syncAngle(bpm: number) {
       // 120 BPM 在正上方，每完整一圈代表 40 BPM。
@@ -99,15 +115,28 @@ Component({
       this.createSelectorQuery()
         .select('.knob-shell')
         .boundingClientRect((rect) => {
-          if (rect === null) return;
+          if (rect === null || rect.width <= 0) return;
           const centerX = rect.left + rect.width / 2;
           const centerY = rect.top + rect.height / 2;
           const runtime = runtimeFor(this);
           runtime.centerX = centerX;
           runtime.centerY = centerY;
+          runtime.scale = rect.width / 236;
           // 查询是异步的，不能依赖 setData 回写触摸起点；只有当前触摸仍在拖动时才接收结果。
           if (initialTouch !== undefined && runtime.isDragging) {
+            // 页面滚动或分屏会改变圆心，每次触摸都按最新布局校验圆环，排除内盘和方形四角。
+            const distance = Math.hypot(initialTouch.x - centerX, initialTouch.y - centerY);
+            if (distance < interactiveInnerRadius * runtime.scale || distance > interactiveOuterRadius * runtime.scale) {
+              runtime.lastAngle = null;
+              runtime.dragBpm = null;
+              runtime.lastEmittedBpm = null;
+              runtime.moved = false;
+              runtime.isDragging = false;
+              this.setData({ isDragging: false });
+              return;
+            }
             runtime.lastAngle = this.angleFor(initialTouch.x, initialTouch.y, centerX, centerY);
+            this.setData({ isDragging: true });
           }
         })
         .exec();
@@ -120,35 +149,14 @@ Component({
       const y = touch.clientY ?? touch.pageY;
       const runtime = runtimeFor(this);
 
-      // 中心盘通过 catchtouch 阻止事件冒泡；这里再限制一次圆环命中范围，
-      // 防止旋钮方形布局盒的四个角误启动旋转。
-      if (runtime.centerX !== 0 && runtime.centerY !== 0) {
-        const distance = Math.hypot(x - runtime.centerX, y - runtime.centerY);
-        if (distance < interactiveInnerRadius || distance > interactiveOuterRadius) {
-          // 中心点击不会进入拖动初始化，但必须清理上一轮拖动遗留的 moved，
-          // 否则拖动结束后的第一次点击会被误判成仍在拖动。
-          runtime.lastAngle = null;
-          runtime.dragBpm = null;
-          runtime.lastEmittedBpm = null;
-          runtime.moved = false;
-          runtime.isDragging = false;
-          this.setData({ isDragging: false });
-          return;
-        }
-      }
-
       runtime.lastAngle = null;
       runtime.dragBpm = this.data.bpm;
       runtime.lastEmittedBpm = this.data.bpm;
       runtime.visualAngle = (this.data.bpm - 120) / 40 * 360;
       runtime.moved = false;
       runtime.isDragging = true;
-      this.setData({ isDragging: true });
       // 首次触摸时等待布局查询完成，再用同一个触点计算起始角度。
       this.measureCenter({ x, y });
-      if (runtime.centerX !== 0 && runtime.centerY !== 0) {
-        runtime.lastAngle = this.angleFor(x, y, runtime.centerX, runtime.centerY);
-      }
     },
 
     onTouchMove(event: WechatMiniprogram.TouchEvent) {
@@ -156,7 +164,7 @@ Component({
       const runtime = runtimeFor(this);
       const lastAngle = runtime.lastAngle;
       const dragBpm = runtime.dragBpm;
-      if (touch === undefined || lastAngle === null || dragBpm === null) return;
+      if (!runtime.isDragging || touch === undefined || lastAngle === null || dragBpm === null) return;
       const x = touch.clientX ?? touch.pageX;
       const y = touch.clientY ?? touch.pageY;
       const angle = this.angleFor(x, y, runtime.centerX, runtime.centerY);

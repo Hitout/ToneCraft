@@ -7,3 +7,41 @@ page {
 button::after {
   border: 0;
 }
+
+/* 平板按可用窗口宽度适配，分屏收窄后自然恢复手机布局。 */
+@media (min-width: 600px) {
+  .page-shell .content {
+    max-width: 680px;
+    padding-right: 32px;
+    padding-bottom: calc(32px + env(safe-area-inset-bottom));
+    padding-left: 32px;
+  }
+
+  .page-shell .mode-navigation-content { max-width: 1200px; }
+
+  .page-shell .sheet-backdrop {
+    z-index: 30;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    padding: 24px;
+  }
+
+  .page-shell .bottom-sheet {
+    max-width: 560px;
+    max-height: calc(100vh - 48px);
+    border: 1px solid #363129;
+    border-radius: 24px;
+  }
+
+  .page-shell .number-dialog {
+    width: 100%;
+    max-width: 420px;
+    max-height: calc(100vh - 48px);
+    margin: auto;
+    overflow-y: auto;
+  }
+
+  .page-shell .sheet-title { font-size: 20px; }
+  .page-shell .sheet-option { min-height: 60px; font-size: 18px; }
+}

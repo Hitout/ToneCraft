@@ -1,5 +1,8 @@
+export {};
+
 interface GaugeData {
   width: number;
+  height: number;
   noteBase: string;
   hasSharp: boolean;
   centsLabel: string;
@@ -24,6 +27,7 @@ Component({
 
   data: {
     width: 0,
+    height: GAUGE_HEIGHT,
     noteBase: 'E',
     hasSharp: false,
     centsLabel: '+0',
@@ -36,12 +40,8 @@ Component({
 
   lifetimes: {
     ready() {
-      wx.createSelectorQuery().in(this).select('#gauge-canvas').boundingClientRect((rect) => {
-        const width = rect?.width ?? 0;
-        this.setData({ width });
-        this.syncLabel();
-        this.drawGauge();
-      }).exec();
+      this.syncLabel();
+      this.measureGauge();
     },
     detached() {
       if (this.data.animationTimerId !== null) {
@@ -50,7 +50,21 @@ Component({
     },
   },
 
+  pageLifetimes: {
+    resize() {
+      wx.nextTick(() => this.measureGauge());
+    },
+  },
+
   methods: {
+    measureGauge() {
+      wx.createSelectorQuery().in(this).select('#gauge-canvas').boundingClientRect((rect) => {
+        if (rect === null || rect.width <= 0 || rect.height <= 0) return;
+        this.setData({ width: rect.width, height: rect.height });
+        this.drawGauge();
+      }).exec();
+    },
+
     syncLabel() {
       const noteName = this.data.noteName;
       const cents = this.data.cents;
@@ -81,9 +95,11 @@ Component({
     },
 
     drawGauge() {
-      const width = this.data.width;
-      if (width <= 0) return;
+      const measuredWidth = this.data.width;
+      if (measuredWidth <= 0) return;
       const context = wx.createCanvasContext('gauge-canvas', this);
+      const scale = this.data.height / GAUGE_HEIGHT;
+      const width = measuredWidth / scale;
       const height = GAUGE_HEIGHT;
       const centerX = width / 2;
       const centerY = height * 0.78;
@@ -91,7 +107,10 @@ Component({
       const opacity = this.data.active ? 1 : 0.34;
       const cents = Math.max(-50, Math.min(50, this.data.displayCents));
 
-      context.clearRect(0, 0, width, height);
+      context.clearRect(0, 0, measuredWidth, this.data.height);
+      // 绘制使用固定高度的基准坐标，刻度与指示器外壳按实测高度等比缩放。
+      context.save();
+      context.scale(scale, scale);
       // 用足够细的短弧近似 SweepGradient，让颜色在绿、橙、红之间连续过渡。
       // 旧实现按五段整色绘制，会在 ±22 cents 和中心位置产生明显断层。
       const stops = [
@@ -152,8 +171,8 @@ Component({
       const pointerX = centerX + Math.cos(pointerAngle) * radius;
       const pointerY = centerY + Math.sin(pointerAngle) * radius;
       this.setData({
-        knobLeft: pointerX - 21.5,
-        knobTop: pointerY - 17.5,
+        knobLeft: (pointerX - 21.5) * scale,
+        knobTop: (pointerY - 17.5) * scale,
         knobVisible: true,
       });
       context.beginPath();
@@ -162,6 +181,7 @@ Component({
       context.arc(pointerX, pointerY, 16.5, 0, Math.PI * 2, false);
       context.fill();
       context.setShadow(0, 0, 0, 'rgba(0, 0, 0, 0)');
+      context.restore();
       context.draw();
     },
 

@@ -76,3 +76,14 @@
   line-height: 22px;
   text-align: center;
 }
+
+@media (min-width: 600px) {
+  .gauge-surface, .gauge-canvas { height: 294px; }
+  .gauge-knob-shell { width: 60.2px; height: 60.2px; }
+  .gauge-reading { top: 123.2px; }
+  .gauge-note { font-size: 134.4px; }
+  .gauge-sharp { margin-top: -23.8px; margin-left: -4.2px; font-size: 67.2px; }
+  .gauge-octave { font-size: 33.6px; }
+  .gauge-cents { margin-left: 9.8px; font-size: 42px; }
+  .gauge-frequency { top: 252px; font-size: 25.2px; line-height: 30.8px; }
+}

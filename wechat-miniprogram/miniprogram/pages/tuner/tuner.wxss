@@ -255,3 +255,52 @@
 }
 
 .sheet-option.is-selected { color: #fff; background: linear-gradient(135deg, #e2a141, #ad580e); font-weight: 600; }
+
+@media (min-width: 600px) {
+  .selector-card { height: 86px; }
+  .selector-cell { padding: 0 20px; }
+  .selector-icon { flex-basis: 40px; width: 40px; height: 40px; margin-right: 14px; }
+  .selector-caption { font-size: 14px; line-height: 20px; }
+  .selector-value { font-size: 20px; line-height: 28px; }
+  .selector-divider { height: 58px; }
+  .status-banner { min-height: 58px; margin-top: 16px; }
+  .status-copy { font-size: 14px; }
+  .status-action { font-size: 16px; }
+
+  .gauge-wrap { margin-top: 22px; }
+  .trend-wrap { height: 166px; margin-top: 16px; }
+  .summary-card { min-height: 148px; margin-top: 28px; padding: 16px 20px; }
+  .summary-title { font-size: 16px; line-height: 22px; }
+  .automatic-control { min-height: 32px; }
+  .automatic-label { font-size: 14px; }
+  .automatic-switch { margin-right: 6px; margin-left: 10px; transform: scale(1.25); }
+  .target-row { margin-top: 18px; }
+  .target-item { min-height: 70px; }
+  .target-note { width: 50px; height: 50px; font-size: 23px; }
+  .target-octave { font-size: 12px; }
+  .target-frequency { margin-top: 6px; font-size: 10px; line-height: 14px; }
+  .chromatic-summary { min-height: 114px; }
+  .chromatic-title { font-size: 19px; line-height: 26px; }
+  .summary-description, .chromatic-frequency { font-size: 14px; }
+}
+
+@media (min-width: 960px) {
+  .page-shell .content {
+    max-width: 1200px;
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas: "selector selector" "status status" "gauge trend" "summary summary";
+    gap: 24px 40px;
+    align-content: center;
+    align-items: center;
+  }
+
+  .selector-card { grid-area: selector; }
+  .status-banner { grid-area: status; margin-top: 0; }
+  .gauge-wrap { grid-area: gauge; margin-top: 0; }
+  .trend-wrap { grid-area: trend; margin-top: 0; }
+  .summary-card { grid-area: summary; margin-top: 0; }
+  .target-row { justify-content: center; gap: 24px; }
+  .target-item { flex: 0 1 100px; }
+}

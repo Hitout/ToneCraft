@@ -54,6 +54,18 @@ Component({
 
   lifetimes: {
     ready() {
+      this.measureChart();
+    },
+  },
+
+  pageLifetimes: {
+    resize() {
+      wx.nextTick(() => this.measureChart());
+    },
+  },
+
+  methods: {
+    measureChart() {
       wx.createSelectorQuery().in(this).select('#trend-chart').boundingClientRect((rect) => {
         const width = rect?.width ?? 0;
         const height = rect?.height ?? TREND_HEIGHT;
@@ -61,9 +73,7 @@ Component({
         this.drawTrend();
       }).exec();
     },
-  },
 
-  methods: {
     drawTrend() {
       const width = this.data.width;
       if (width <= 0) return;

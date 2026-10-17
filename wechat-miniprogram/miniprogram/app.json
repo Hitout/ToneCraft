@@ -16,6 +16,7 @@
     }
   },
   "style": "v2",
+  "resizable": true,
   "workers": "workers",
   "lazyCodeLoading": "requiredComponents",
   "sitemapLocation": "sitemap.json"

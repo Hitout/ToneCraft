@@ -83,6 +83,12 @@ Component({
     },
   },
 
+  pageLifetimes: {
+    resize() {
+      wx.nextTick(() => this.measureTrack());
+    },
+  },
+
   methods: {
     syncAnimation(playing: boolean, beatDurationMs: number) {
       const runtime = runtimeFor(this);
