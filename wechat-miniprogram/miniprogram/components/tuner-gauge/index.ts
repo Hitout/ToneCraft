@@ -2,7 +2,6 @@ interface GaugeData {
   width: number;
   noteBase: string;
   hasSharp: boolean;
-  hasReading: boolean;
   centsLabel: string;
   displayCents: number;
   knobLeft: number;
@@ -15,8 +14,8 @@ const GAUGE_HEIGHT = 210;
 
 Component({
   properties: {
-    noteName: { type: String, value: '—', observer() { this.syncLabel(); } },
-    octave: { type: Number, value: 0 },
+    noteName: { type: String, value: 'E', observer() { this.syncLabel(); } },
+    octave: { type: Number, value: 2 },
     cents: { type: Number, value: 0, observer(value: number) { this.syncLabel(); this.animateTo(value); } },
     active: { type: Boolean, value: false, observer() { this.drawGauge(); } },
     readingColor: { type: String, value: '#72e85c', observer() { this.drawGauge(); } },
@@ -25,9 +24,8 @@ Component({
 
   data: {
     width: 0,
-    noteBase: '—',
+    noteBase: 'E',
     hasSharp: false,
-    hasReading: false,
     centsLabel: '+0',
     displayCents: 0,
     knobLeft: 0,
@@ -59,7 +57,6 @@ Component({
       this.setData({
         noteBase: noteName.replace('♯', ''),
         hasSharp: noteName.includes('♯'),
-        hasReading: noteName !== '—',
         centsLabel: `${cents >= 0 ? '+' : ''}${Math.round(cents)}`,
       });
     },

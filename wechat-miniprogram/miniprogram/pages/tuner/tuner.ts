@@ -20,12 +20,10 @@ const TUNER_PAGE_PATH = '/pages/tuner/tuner';
 const SHARE_TITLE = '音匠调音器';
 const INSTRUMENT_STORAGE_KEY = 'tonecraft.tuner.instrument';
 const PRESET_STORAGE_KEY = 'tonecraft.tuner.preset';
-// 音高回调较慢时容许连续窗口间的抖动，超过后再显示等待状态。
-const SIGNAL_TIMEOUT_MS = 750;
+const SIGNAL_TIMEOUT_MS = 420;
 const TREND_DURATION_MS = 8000;
 const TUNED_CONFIRMATION_MS = 300;
-// iOS 回调间隔可能接近 300ms，允许少量抖动而不重置调准确认。
-const MAXIMUM_CONFIRMATION_GAP_MS = 750;
+const MAXIMUM_CONFIRMATION_GAP_MS = 150;
 
 type SheetType = '' | 'instrument' | 'preset';
 
@@ -85,13 +83,13 @@ const INITIAL_DATA: PageData = {
   contentTop: 70,
   instrumentLabel: '吉他',
   presetLabel: '标准调弦',
-  noteName: '—',
-  octave: 0,
+  noteName: 'E',
+  octave: 2,
   cents: 0,
   readingColor: '#72e85c',
-  frequencyLabel: '等待声音',
+  frequencyLabel: '82.41 Hz',
   targetFrequencyLabel: '',
-  gaugeActive: false,
+  gaugeActive: true,
   showStatusBanner: false,
   statusMessage: '',
   canRetry: false,
@@ -195,7 +193,6 @@ Page({
   automaticDetection: true,
   manualTargetIndex: null as number | null,
   lastReading: null as TunerReading | null,
-  signalActive: false,
   trendSamples: [] as TrendSample[],
   tunedTargetIndices: [] as number[],
   inTuneCandidateIndex: null as number | null,
@@ -315,7 +312,6 @@ Page({
     this.setData({ showStatusBanner: false, statusMessage: '', canRetry: false, statusActionLabel: '' });
     try {
       await requestRecordPermission();
-      console.log('[tuner-debug] 录音权限已通过 ' + JSON.stringify({ isForeground: this.isForeground }));
       // 权限弹窗期间页面可能已经被切走；后台页面不得重新占用全局录音会话。
       if (!this.isForeground) return;
       recorderTuner.setCallbacks({
@@ -329,8 +325,7 @@ Page({
         onInterrupted: (interrupted) => this.handleInterruption(interrupted),
       });
       recorderTuner.start();
-    } catch (error) {
-      console.warn('[tuner-debug] 录音权限流程失败', error);
+    } catch (_) {
       if (!this.isForeground) return;
       this.setData({
         showStatusBanner: true,
@@ -346,26 +341,22 @@ Page({
   stopListening(updateView = true, clearTrend = true) {
     if (this.signalTimer !== undefined) clearTimeout(this.signalTimer);
     this.signalTimer = undefined;
-    this.signalActive = false;
     recorderTuner.stop();
     this.resetConfirmation();
     if (clearTrend) {
-      // 录音停止后清空旧趋势，并让表盘回到等待声音状态。
+      // 切换模式或调弦时，旧趋势不再属于当前音轨；保留最后读数用于表盘回显。
       this.trendSamples = [];
-      if (updateView) this.render();
+      if (updateView) this.setData({ trendSamples: [] });
       return;
     }
     // 仅进入后台时保留历史，并用空点断开前后台两段声音轨迹。
-    this.appendTrendGap(Date.now(), false);
-    if (updateView) this.render();
+    this.appendTrendGap(Date.now(), updateView);
   },
 
   handleInterruption(interrupted: boolean) {
     if (!this.isForeground) return;
     if (interrupted) {
-      this.signalActive = false;
       this.appendTrendGap();
-      this.render();
       this.setData({
         showStatusBanner: true,
         statusMessage: '调音被其他音频会话中断。',
@@ -381,10 +372,8 @@ Page({
 
   showUnavailable(reason = '') {
     if (!this.isForeground) return;
-    this.signalActive = false;
     this.appendTrendGap();
     this.resetConfirmation();
-    this.render();
     const permissionDenied = /unauthorized|permission|denied/i.test(reason);
     this.setData({
       showStatusBanner: true,
@@ -412,9 +401,11 @@ Page({
     capturedAt = Date.now(),
   ) {
     if (!this.isForeground) return;
+    // 线程结果可能晚于静音断点返回；只消费向前推进的采集时间，避免旧结果倒退音轨。
+    const latest = this.trendSamples[this.trendSamples.length - 1];
+    if (latest !== undefined && capturedAt <= latest.capturedAt) return;
     const lockedTargetIndex = this.automaticDetection ? null : this.manualTargetIndex;
     const reading = mapFrequency(frequencyHz, confidence, this.currentPreset, lockedTargetIndex);
-    this.signalActive = true;
     const now = capturedAt;
     const history = this.trendSamples.filter((sample) => sample.capturedAt >= now - TREND_DURATION_MS);
     // 音高轨迹由 PitchTracker 判定；页面只消费明确的新轨迹边界，
@@ -431,11 +422,10 @@ Page({
 
     if (this.signalTimer !== undefined) clearTimeout(this.signalTimer);
     this.signalTimer = setTimeout(() => {
-      // 静音后显示等待状态，并在趋势图中断开上一段有效音高。
-      this.signalActive = false;
-      this.appendTrendGap(Date.now(), false);
+      // 静音不清掉最后一次可信读数，让用户仍能看清刚才识别到的音名与偏差。
+      // 趋势图追加空点，使无信号区间与上一段有效音高明确断开。
+      this.appendTrendGap(capturedAt + SIGNAL_TIMEOUT_MS);
       this.resetConfirmation();
-      this.render();
     }, SIGNAL_TIMEOUT_MS);
   },
 
@@ -479,21 +469,18 @@ Page({
 
   render(clearStatus = false) {
     const reading = this.lastReading ?? this.fallbackReading();
-    const hasSignal = this.signalActive && this.lastReading !== null;
-    const color = readingColor(hasSignal ? reading.cents : 0);
+    const color = readingColor(reading.cents);
     const isChromatic = this.currentPreset.isChromatic;
     const dataPatch: Partial<PageData> = {
       instrumentLabel: instrumentLabel(this.currentInstrument),
       presetLabel: presetLabel(this.currentPresetId),
-      noteName: hasSignal ? reading.noteName : '—',
-      octave: hasSignal ? reading.octave : 0,
-      cents: hasSignal ? reading.cents : 0,
+      noteName: reading.noteName,
+      octave: reading.octave,
+      cents: reading.cents,
       readingColor: color,
-      frequencyLabel: hasSignal ? reading.frequencyHz.toFixed(2) + ' Hz' : '等待声音',
-      targetFrequencyLabel: hasSignal
-        ? '目标频率 ' + reading.targetFrequencyHz.toFixed(2) + ' Hz'
-        : '等待声音',
-      gaugeActive: hasSignal,
+      frequencyLabel: reading.frequencyHz.toFixed(2) + ' Hz',
+      targetFrequencyLabel: '目标频率 ' + reading.targetFrequencyHz.toFixed(2) + ' Hz',
+      gaugeActive: true,
       isChromatic,
       automaticDetection: this.automaticDetection,
       summaryTitle: isChromatic
@@ -529,7 +516,7 @@ Page({
       targetFrequencyHz: target.frequencyHz,
       cents: 0,
       confidence: 0,
-      targetIndex: this.currentPreset.isChromatic ? null : this.manualTargetIndex,
+      targetIndex: this.currentPreset.isChromatic ? null : targetIndex,
     };
   },
 
@@ -633,7 +620,6 @@ Page({
     if (this.signalTimer !== undefined) clearTimeout(this.signalTimer);
     this.signalTimer = undefined;
     this.lastReading = null;
-    this.signalActive = false;
     this.trendSamples = [];
     this.tunedTargetIndices = [];
     this.resetConfirmation();

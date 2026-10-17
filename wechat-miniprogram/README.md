@@ -23,4 +23,6 @@ ToneCraft 的微信小程序版本，包含节拍器与调音器。
 3. 使用你有权限管理的 AppID。
 4. 运行 `npm run typecheck` 和 `npm test` 做本地检查。
 
+修改调音检测器后运行 `npm run build:tuner-worker`，同步独立线程中使用的 JavaScript；生成文件随源码提交，开发者工具可直接编译。
+
 公开仓库不包含 `miniprogram/assets/icons/` 图标文件。启动前请在该路径准备你有权使用的完整图标资源；缺少图标时，相关页面无法正常显示。

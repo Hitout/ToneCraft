@@ -4,6 +4,7 @@
   "private": true,
   "description": "ToneCraft 微信小程序（节拍器与调音器）",
   "scripts": {
+    "build:tuner-worker": "node scripts/build-tuner-worker.cjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"

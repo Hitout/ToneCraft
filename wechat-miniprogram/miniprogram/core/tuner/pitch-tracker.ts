@@ -71,8 +71,13 @@ export class PitchTracker {
     confidence: number,
     rms: number,
     capturedAt: number,
+    observationIntervalMs = 0,
   ): PitchTrackUpdate | null {
     if (!Number.isFinite(frequencyHz) || frequencyHz <= 0 || !Number.isFinite(capturedAt)) return null;
+    // 分析线程可能跳过窗口；确认三条候选需覆盖两个实际分析间隔，但不减少证据数量。
+    const intervalMs = Number.isFinite(observationIntervalMs) ? Math.max(0, observationIntervalMs) : 0;
+    const candidateWindowMs = Math.max(this.config.candidateWindowMs, intervalMs * 2);
+    const silenceResetMs = Math.max(this.config.silenceResetMs, intervalMs);
     const observation: PitchObservation = {
       frequencyHz,
       confidence: Math.max(0, Math.min(1, confidence)),
@@ -84,7 +89,7 @@ export class PitchTracker {
     this.lastObservationAt = capturedAt;
     if (
       previousObservationAt !== null &&
-      (capturedAt < previousObservationAt || capturedAt - previousObservationAt > this.config.silenceResetMs)
+      (capturedAt < previousObservationAt || capturedAt - previousObservationAt > silenceResetMs)
     ) {
       // 长时间没有可信音高时，下一次拨弦必须重新起音，不能沿用旧轨迹平滑。
       this.clearTrackingState();
@@ -96,7 +101,7 @@ export class PitchTracker {
     ) {
       return this.updateTrackedPitch(observation);
     }
-    return this.tryAcquirePitch(observation);
+    return this.tryAcquirePitch(observation, candidateWindowMs);
   }
 
   reset(): void {
@@ -127,11 +132,11 @@ export class PitchTracker {
     return this.buildUpdate(observation, false);
   }
 
-  private tryAcquirePitch(observation: PitchObservation): PitchTrackUpdate | null {
+  private tryAcquirePitch(observation: PitchObservation, candidateWindowMs: number): PitchTrackUpdate | null {
     this.candidateObservations.push(observation);
     this.removeOlderThan(
       this.candidateObservations,
-      observation.capturedAt - this.config.candidateWindowMs,
+      observation.capturedAt - candidateWindowMs,
     );
 
     const cluster: PitchObservation[] = [];
