@@ -1,0 +1,22 @@
+[
+  {
+    "id": "tonecraft",
+    "name": "ToneCraft",
+    "icon": "tonecraft.png",
+    "download": "https://play.google.com/store/apps/details?id=com.gavyn.tonecraft",
+    "privacy": "https://hitout.github.io/ToneCraft/privacy-policy/android/en/",
+    "zh": {
+      "category": "音乐与练习",
+      "subtitle": "音匠 · 调音器与节拍器",
+      "description": "调准每一个音，跟稳每一拍。把乐器调音、节拍练习和常用设置，收进一个顺手的工具。",
+      "features": ["多乐器实时调音", "20–400 BPM 节拍器", "支持后台播放"],
+      "privacy": "https://hitout.github.io/ToneCraft/privacy-policy/android/"
+    },
+    "en": {
+      "category": "Music & practice",
+      "subtitle": "Tuner & metronome",
+      "description": "Find your pitch. Keep your rhythm. A focused home for instrument tuning, metronome practice, and your everyday settings.",
+      "features": ["Real-time instrument tuning", "20–400 BPM metronome", "Background playback"]
+    }
+  }
+]
