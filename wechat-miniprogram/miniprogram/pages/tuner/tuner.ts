@@ -195,17 +195,24 @@ Page({
   lastReading: null as TunerReading | null,
   trendSamples: [] as TrendSample[],
   tunedTargetIndices: [] as number[],
-  inTuneCandidateIndex: null as number | null,
+  inTuneCandidateKey: null as string | null,
   inTuneCandidateAt: null as number | null,
   lastInTuneFrameAt: null as number | null,
+  confirmedChromaticNoteKey: null as string | null,
   signalTimer: undefined as ReturnType<typeof setTimeout> | undefined,
   isRequestingPermission: false,
   permissionStartScheduled: false,
   pageReady: false,
   isForeground: true,
+  tuningSuccessAudio: null as WechatMiniprogram.InnerAudioContext | null,
 
   onLoad() {
     this.isForeground = true;
+    // 短提示音使用 WebAudio 实现并提前设置资源，减少调准确认时的启动延迟。
+    const audio = wx.createInnerAudioContext({ useWebAudioImplement: true });
+    audio.src = '/assets/audio/tuning_success.mp3';
+    audio.volume = 0.55;
+    this.tuningSuccessAudio = audio;
     this.setData(customNavigationLayout());
     // 开启右上角的转发和朋友圈入口；复制链接由微信菜单提供，回调负责绑定当前页面的链接参数。
     wx.showShareMenu({
@@ -230,6 +237,7 @@ Page({
 
   onHide() {
     this.isForeground = false;
+    this.tuningSuccessAudio?.stop();
     // 后台停止采集但保留上一段轨迹，回到前台时与 APP 一样从断点继续显示。
     this.stopListening(true, false);
   },
@@ -246,6 +254,8 @@ Page({
     this.pageReady = false;
     this.permissionStartScheduled = false;
     this.stopListening(false, true);
+    this.tuningSuccessAudio?.destroy();
+    this.tuningSuccessAudio = null;
     recorderTuner.setCallbacks(null);
     if (typeof wx.offCopyUrl === 'function') {
       wx.offCopyUrl();
@@ -430,6 +440,7 @@ Page({
       // 趋势图追加空点，使无信号区间与上一段有效音高明确断开。
       this.appendTrendGap(capturedAt + SIGNAL_TIMEOUT_MS);
       this.resetConfirmation();
+      this.confirmedChromaticNoteKey = null;
     }, SIGNAL_TIMEOUT_MS);
   },
 
@@ -444,29 +455,53 @@ Page({
 
   updateTunedTargets(reading: TunerReading, capturedAt: number, startsNewTrack = false) {
     const targetIndex = reading.targetIndex;
-    if (targetIndex === null || Math.abs(reading.cents) > 3) {
+    if (targetIndex === null && startsNewTrack) {
+      this.confirmedChromaticNoteKey = null;
+    }
+    if (Math.abs(reading.cents) > 3) {
+      if (targetIndex === null) this.confirmedChromaticNoteKey = null;
       this.resetConfirmation();
       return;
     }
+    const candidateKey = targetIndex === null
+      ? `chromatic:${reading.noteName}:${reading.octave}`
+      : `target:${targetIndex}`;
     const evidenceInterrupted = startsNewTrack ||
-      this.inTuneCandidateIndex !== targetIndex ||
+      this.inTuneCandidateKey !== candidateKey ||
       this.lastInTuneFrameAt === null ||
       capturedAt - this.lastInTuneFrameAt > MAXIMUM_CONFIRMATION_GAP_MS;
     if (evidenceInterrupted) {
-      this.inTuneCandidateIndex = targetIndex;
+      this.inTuneCandidateKey = candidateKey;
       this.inTuneCandidateAt = capturedAt;
     }
     this.lastInTuneFrameAt = capturedAt;
     if (this.inTuneCandidateAt !== null && capturedAt - this.inTuneCandidateAt >= TUNED_CONFIRMATION_MS) {
-      if (!this.tunedTargetIndices.includes(targetIndex)) {
+      if (targetIndex === null) {
+        if (this.confirmedChromaticNoteKey !== candidateKey) {
+          this.confirmedChromaticNoteKey = candidateKey;
+          this.playTuningSuccessSound();
+        }
+      } else if (!this.tunedTargetIndices.includes(targetIndex)) {
         this.tunedTargetIndices.push(targetIndex);
+        this.playTuningSuccessSound();
       }
       this.resetConfirmation();
     }
   },
 
+  playTuningSuccessSound() {
+    const audio = this.tuningSuccessAudio;
+    if (audio === null) return;
+    try {
+      audio.stop();
+      audio.play();
+    } catch (_) {
+      // 播放异常只跳过提示音，不影响麦克风采集与调音状态更新。
+    }
+  },
+
   resetConfirmation() {
-    this.inTuneCandidateIndex = null;
+    this.inTuneCandidateKey = null;
     this.inTuneCandidateAt = null;
     this.lastInTuneFrameAt = null;
   },
@@ -626,6 +661,7 @@ Page({
     this.lastReading = null;
     this.trendSamples = [];
     this.tunedTargetIndices = [];
+    this.confirmedChromaticNoteKey = null;
     this.resetConfirmation();
     this.render();
   },
