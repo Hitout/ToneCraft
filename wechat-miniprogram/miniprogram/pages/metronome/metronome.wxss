@@ -757,7 +757,7 @@
 }
 
 .option-grid.grid3 { grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 16px; }
-.option-grid.grid4 { grid-template-columns: repeat(4, minmax(0, 1fr)); column-gap: 10px; }
+.option-grid.grid5 { grid-template-columns: repeat(5, minmax(0, 1fr)); column-gap: 10px; }
 
 .grid-option {
   height: 43px;
@@ -780,8 +780,9 @@
   border-radius: 17px;
 }
 
-.grid4 .grid-option {
-  height: 43px;
+.grid5 .grid-option {
+  height: 44px;
+  box-sizing: border-box;
   border-radius: 17px;
 }
 
@@ -1150,7 +1151,7 @@ button::after {
   .beat-slider-slot { top: 188px; }
 
   .grid-option { height: 56px; font-size: 18px; }
-  .grid3 .grid-option, .grid4 .grid-option { height: 56px; }
+  .grid3 .grid-option, .grid5 .grid-option { height: 56px; }
   .grid-option-icon { width: 44px; height: 44px; }
   .trainer-field-label, .trainer-summary { font-size: 15px; }
 }

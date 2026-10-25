@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_CONFIG,
+  SUBDIVISIONS,
+  Subdivision,
   beatDurationSeconds,
   normalizedConfig,
   subdivisionForBeat,
@@ -86,6 +88,95 @@ describe('TapTempoTracker', () => {
 });
 
 describe('MetronomeTimeline', () => {
+  it('已提前排入但尚未发声的拍点保持固定起点，改速只缩放其后的间隔', () => {
+    const timeline = new MetronomeTimeline();
+    timeline.reset(0.08, normalizedConfig({ bpm: 120 }));
+    expect(timeline.collect(0.15).map((tick) => tick.at)).toEqual([0.08]);
+    timeline.queueConfig(normalizedConfig({ bpm: 240 }), 0.01);
+    expect(timeline.collect(0.4)[0].at).toBeCloseTo(0.33);
+  });
+
+  it.each(SUBDIVISIONS)('%s 的整拍静音会覆盖全部细分，且仍正常推进下一拍', (subdivision) => {
+    const timeline = new MetronomeTimeline();
+    timeline.reset(0, normalizedConfig({
+      subdivision, beatStrengths: ['muted', 'secondary', 'normal', 'normal'],
+    }));
+    const ticks = timeline.collect(1);
+    const mutedBeat = ticks.filter((tick) => tick.beatIndex === 0);
+    expect(mutedBeat.every((tick) => !tick.audible && tick.strength === 'muted')).toBe(true);
+    const nextBeat = ticks.filter((tick) => tick.beatIndex === 1);
+    expect(nextBeat[0].at).toBeCloseTo(0.5);
+    expect(nextBeat.some((tick) => tick.audible)).toBe(true);
+  });
+
+  it.each([
+    { subdivisions: ['quarter', 'sixteenth', 'quarter', 'quarter'] as const, cursor: 0.25, expected: 0.375 },
+    { subdivisions: ['sixteenth', 'quarter', 'quarter', 'quarter'] as const, cursor: 0.4, expected: 0.45 },
+  ])('混合细分改速保留当前间隔相位：$subdivisions', ({ subdivisions, cursor, expected }) => {
+    const config = normalizedConfig({
+      bpm: 120, customSubdivisionEnabled: true, beatSubdivisions: [...subdivisions],
+    });
+    const timeline = new MetronomeTimeline();
+    timeline.reset(0, config);
+    timeline.collect(cursor);
+    timeline.queueConfig(normalizedConfig({ ...config, bpm: 240 }), cursor);
+    expect(timeline.collect(0.51)[0].at).toBeCloseTo(expected);
+  });
+
+  const newRhythms: Array<[Subdivision, number[]]> = [
+    ['dotted-eighth-sixteenth', [0, 0.75]],
+    ['sixteenth-dotted-eighth', [0, 0.25]],
+    ['eighth-sixteenth-sixteenth', [0, 0.5, 0.75]],
+    ['sixteenth-sixteenth-eighth', [0, 0.25, 0.5]],
+    ['sixteenth-eighth-sixteenth', [0, 0.25, 0.75]],
+    ['eighth-note-rest', [0]],
+    ['sixteenth-rest-note-note-note', [0.25, 0.5, 0.75]],
+    ['eighth-rest-sixteenth-sixteenth', [0.5, 0.75]],
+    ['sixteenth-sixteenth-eighth-rest', [0, 0.25]],
+    ['sixteenth-note-note-rest-note', [0, 0.25, 0.75]],
+    ['sixteenth-eighth-rest-sixteenth', [0, 0.75]],
+    ['sixteenth-rest-note-note-rest', [0.25, 0.5]],
+  ];
+
+  it.each(newRhythms)('%s 按实际音符时值触发并保持每拍总长', (subdivision, offsets) => {
+    for (const timeSignature of ['4/4', '6/8'] as const) {
+      const config = normalizedConfig({ bpm: 120, timeSignature, subdivision });
+      const beat = beatDurationSeconds(config);
+      const timeline = new MetronomeTimeline();
+      timeline.reset(0, config);
+      const audibleTimes = timeline.collect(beat * 2 + 0.001)
+        .filter((tick) => tick.audible)
+        .map((tick) => tick.at);
+      const expected = [
+        ...offsets, ...offsets.map((offset) => offset + 1),
+        ...(offsets[0] === 0 ? [2] : []),
+      ];
+      expect(audibleTimes).toHaveLength(expected.length);
+      audibleTimes.forEach((at, index) => expect(at).toBeCloseTo(expected[index] * beat));
+    }
+  });
+
+  it('新节奏可以逐拍混用且相同网格的节奏切换仍等待下一小节', () => {
+    const timeline = new MetronomeTimeline();
+    const config = normalizedConfig({
+      timeSignature: '5/4',
+      customSubdivisionEnabled: true,
+      beatStrengths: ['accent', 'normal', 'normal', 'normal', 'normal'],
+      beatSubdivisions: newRhythms.slice(0, 5).map(([rhythm]) => rhythm),
+    });
+    timeline.reset(0, config);
+    timeline.collect(0.001);
+    timeline.queueConfig(normalizedConfig({
+      ...config,
+      beatSubdivisions: newRhythms.slice(0, 5).map(() => 'sixteenth-dotted-eighth'),
+    }));
+    const audibleTimes = timeline.collect(3.001).filter((tick) => tick.audible).map((tick) => tick.at);
+    expect(audibleTimes).toEqual([
+      0.375, 0.5, 0.625, 1, 1.25, 1.375, 1.5, 1.625, 1.75,
+      2, 2.125, 2.375, 2.5, 2.625, 3,
+    ]);
+  });
+
   it('按音频时间点生成连续节拍', () => {
     const timeline = new MetronomeTimeline();
     timeline.reset(10, normalizedConfig({ bpm: 120 }));

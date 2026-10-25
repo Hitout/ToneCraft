@@ -81,7 +81,7 @@ interface PageData {
   sheet: SheetType;
   sheetTitle: string;
   numberError: string;
-  optionLayout: 'list' | 'grid3' | 'grid4';
+  optionLayout: 'list' | 'grid3' | 'grid5';
   options: OptionItem[];
   beatSubdivisions: BeatSubdivisionItem[];
   beatSubdivisionRows: BeatSubdivisionItem[][];
@@ -262,6 +262,19 @@ function subdivisionIcon(subdivision: Subdivision): string {
       return '../../assets/icons/metronome/subdivision/triplet-note-rest-note.svg';
     case 'triplet-note-note-rest':
       return '../../assets/icons/metronome/subdivision/triplet-note-note-rest.svg';
+    case 'dotted-eighth-sixteenth':
+    case 'sixteenth-dotted-eighth':
+    case 'eighth-sixteenth-sixteenth':
+    case 'sixteenth-sixteenth-eighth':
+    case 'sixteenth-eighth-sixteenth':
+    case 'eighth-note-rest':
+    case 'sixteenth-rest-note-note-note':
+    case 'eighth-rest-sixteenth-sixteenth':
+    case 'sixteenth-sixteenth-eighth-rest':
+    case 'sixteenth-note-note-rest-note':
+    case 'sixteenth-eighth-rest-sixteenth':
+    case 'sixteenth-rest-note-note-rest':
+      return `../../assets/icons/metronome/subdivision/${subdivision}.svg`;
   }
 }
 
@@ -655,7 +668,7 @@ Page({
             ? subdivisionForBeat(state.config, 0)
             : state.config.subdivision,
         ),
-        optionLayout: 'grid4',
+        optionLayout: 'grid5',
         customSubdivisionEnabled: state.config.customSubdivisionEnabled,
         beatSubdivisions,
         beatSubdivisionRows: makeBeatSubdivisionRows(beatSubdivisions),

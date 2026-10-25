@@ -30,6 +30,8 @@ export class RecorderTuner {
   private samplesSinceAnalysis = 0;
   private danglingByte: number | null = null;
   private listening = false;
+  private stopPending = false;
+  private restartRequested = false;
   private lastAnalysisAt = 0;
   private lastProcessedAt: number | null = null;
   private lastAnalysisDurationMs = 0;
@@ -39,14 +41,27 @@ export class RecorderTuner {
 
   constructor() {
     this.recorder.onFrameRecorded(({ frameBuffer }) => this.consumePcm(frameBuffer));
+    this.recorder.onStop(() => {
+      // 主动停止后先等旧会话结束；自然到期时仅在页面仍需要录音的情况下续接。
+      const shouldRestart = this.restartRequested || (this.listening && !this.stopPending);
+      this.stopPending = false;
+      this.restartRequested = false;
+      this.listening = false;
+      this.closeAnalysisWorker();
+      this.resetBuffer();
+      this.pitchTracker.reset();
+      if (shouldRestart && !this.interrupted && this.callbacks !== null) this.start();
+    });
     this.recorder.onError((error) => {
       // stop() 或系统中断会主动结束录音；这些结束回调不应被误判为麦克风故障。
-      const shouldNotify = this.listening && !this.interrupted;
+      const shouldNotify = (this.listening || this.restartRequested) && !this.interrupted;
       // 保留原生错误码，便于定位真机上启动录音失败的具体原因；页面只展示统一的轻量提示。
       console.warn('[tuner-recorder] 录音启动失败', error?.errMsg || error);
       this.closeAnalysisWorker();
       this.listening = false;
-      if (!this.interrupted) this.interrupted = false;
+      this.stopPending = false;
+      this.restartRequested = false;
+      this.resetBuffer();
       this.pitchTracker.reset();
       if (shouldNotify) this.callbacks?.onUnavailable(error?.errMsg);
     });
@@ -57,11 +72,7 @@ export class RecorderTuner {
       this.listening = false;
       this.interrupted = true;
       this.resetBuffer();
-      try {
-        this.recorder.stop();
-      } catch (_) {
-        // 系统已经回收录音会话时，结束中断仍可继续走重建流程。
-      }
+      this.stopRecorder();
       this.callbacks?.onInterrupted(true);
     });
     this.recorder.onInterruptionEnd(() => {
@@ -77,6 +88,11 @@ export class RecorderTuner {
 
   start(): void {
     if (this.listening) return;
+    if (this.stopPending) {
+      // 停止回调可能晚于页面重新进入，先记下恢复意图，避免旧回调清掉新会话。
+      this.restartRequested = true;
+      return;
+    }
     this.resetBuffer();
     this.pitchTracker.reset();
     this.interrupted = false;
@@ -102,19 +118,27 @@ export class RecorderTuner {
   }
 
   stop(): void {
+    this.restartRequested = false;
     const hadSession = this.listening || this.interrupted;
     this.closeAnalysisWorker();
     this.listening = false;
     this.interrupted = false;
     this.pitchTracker.reset();
     if (hadSession) {
-      try {
-        this.recorder.stop();
-      } catch (_) {
-        // 已被系统回收的录音会话再次 stop 时无需向页面报告错误。
-      }
+      this.stopRecorder();
     }
     this.resetBuffer();
+  }
+
+  private stopRecorder(): void {
+    if (this.stopPending) return;
+    this.stopPending = true;
+    try {
+      this.recorder.stop();
+    } catch (_) {
+      // 原生会话已经被回收时可能没有结束回调，不能继续阻塞后续启动。
+      this.stopPending = false;
+    }
   }
 
   restartAfterInterruption(): void {

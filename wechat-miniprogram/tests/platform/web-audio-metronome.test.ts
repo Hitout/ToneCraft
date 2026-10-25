@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { normalizedConfig } from '../../miniprogram/core/metronome/metronome-config';
+import { Subdivision, normalizedConfig } from '../../miniprogram/core/metronome/metronome-config';
 import {
   ScheduledBeatEvent,
   WebAudioMetronome,
@@ -48,6 +48,50 @@ afterEach(() => {
 });
 
 describe('WebAudioMetronome', () => {
+  const rhythms: Array<[Subdivision, number[]]> = [
+    ['dotted-eighth-sixteenth', [0, 0.375]],
+    ['sixteenth-dotted-eighth', [0, 0.125]],
+    ['eighth-sixteenth-sixteenth', [0, 0.25, 0.375]],
+    ['sixteenth-sixteenth-eighth', [0, 0.125, 0.25]],
+    ['sixteenth-eighth-sixteenth', [0, 0.125, 0.375]],
+    ['eighth-note-rest', [0]],
+    ['sixteenth-rest-note-note-note', [0.125, 0.25, 0.375]],
+    ['eighth-rest-sixteenth-sixteenth', [0.25, 0.375]],
+    ['sixteenth-sixteenth-eighth-rest', [0, 0.125]],
+    ['sixteenth-note-note-rest-note', [0, 0.125, 0.375]],
+    ['sixteenth-eighth-rest-sixteenth', [0, 0.375]],
+    ['sixteenth-rest-note-note-rest', [0.125, 0.25]],
+  ];
+
+  it.each(rhythms)('%s 只在音符起点创建实际音频节点', async (subdivision, onsets) => {
+    vi.useFakeTimers();
+    const sources: FakeBufferSource[] = [];
+    const context = {
+      state: 'running', currentTime: 0, sampleRate: 48000, destination: {},
+      resume: vi.fn(async () => {}), close: vi.fn(async () => {}),
+      createBuffer: (_channels: number, length: number, sampleRate: number) =>
+        new FakeAudioBuffer(length, sampleRate),
+      createBufferSource: () => {
+        const source = new FakeBufferSource();
+        sources.push(source);
+        return source;
+      },
+    } as unknown as WechatMiniprogram.WebAudioContext;
+    vi.stubGlobal('wx', { createWebAudioContext: () => context });
+    const audio = new WebAudioMetronome();
+    try {
+      await audio.start(normalizedConfig({ bpm: 120, subdivision }));
+      for (let milliseconds = 25; milliseconds <= 500; milliseconds += 25) {
+        // 音频时钟独立于 JS 定时器，显式推进两者以验证真正排入音频节点的时刻。
+        context.currentTime = milliseconds / 1000;
+        vi.advanceTimersByTime(25);
+      }
+      const starts = sources.flatMap((source) => source.starts).filter((at) => at < 0.58);
+      expect(starts).toHaveLength(onsets.length);
+      starts.forEach((at, index) => expect(at).toBeCloseTo(0.08 + onsets[index]));
+    } finally { audio.dispose(); }
+  });
+
   it('把节拍提前排入音频时钟，并清理倒计时缩短后的视觉回调', async () => {
     vi.useFakeTimers();
     const sources: FakeBufferSource[] = [];

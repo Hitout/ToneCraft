@@ -3,12 +3,18 @@ import type { RecorderTuner } from '../../miniprogram/platform/recorder-tuner';
 
 class FakeRecorder {
   frame: (event: { frameBuffer: ArrayBuffer }) => void = () => {};
+  stopped: () => void = () => {};
+  error: (event: { errMsg: string }) => void = () => {};
+  interruptionBegin: () => void = () => {};
+  interruptionEnd: () => void = () => {};
+  autoStop = true;
   start = vi.fn();
-  stop = vi.fn();
+  stop = vi.fn(() => { if (this.autoStop) this.stopped(); });
   onFrameRecorded(listener: typeof this.frame): void { this.frame = listener; }
-  onError(): void {}
-  onInterruptionBegin(): void {}
-  onInterruptionEnd(): void {}
+  onStop(listener: () => void): void { this.stopped = listener; }
+  onError(listener: typeof this.error): void { this.error = listener; }
+  onInterruptionBegin(listener: () => void): void { this.interruptionBegin = listener; }
+  onInterruptionEnd(listener: () => void): void { this.interruptionEnd = listener; }
   push(value: number): void { this.frame({ frameBuffer: new Int16Array(4096).fill(value).buffer }); }
   tone(frequencyHz: number): void {
     const pcm = Int16Array.from({ length: 4096 }, (_, index) =>
@@ -44,14 +50,92 @@ async function setup(platform = 'ios') {
   const { recorderTuner } = await import('../../miniprogram/platform/recorder-tuner');
   active = recorderTuner;
   const onPitch = vi.fn();
-  recorderTuner.setCallbacks({ onPitch, onUnavailable: vi.fn(), onInterrupted: vi.fn() });
+  const onUnavailable = vi.fn();
+  const onInterrupted = vi.fn();
+  recorderTuner.setCallbacks({ onPitch, onUnavailable, onInterrupted });
   recorderTuner.start();
-  return { tuner: recorderTuner, recorder, workers, createWorker, onPitch };
+  return { tuner: recorderTuner, recorder, workers, createWorker, onPitch, onUnavailable, onInterrupted };
 }
 
 afterEach(() => { active?.stop(); active = null; vi.useRealTimers(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
 describe('调音录音会话', () => {
+  it('录音十分钟自然结束后续接会话并释放旧计算线程', async () => {
+    const { tuner, recorder, workers, onUnavailable } = await setup();
+    expect(recorder.start.mock.calls[0][0].duration).toBe(600000);
+    workers[0].ready();
+    vi.advanceTimersByTime(600000);
+    recorder.stopped();
+    expect(recorder.start).toHaveBeenCalledTimes(2);
+    expect(workers[0].terminate).toHaveBeenCalledTimes(1);
+    expect(workers).toHaveLength(2);
+    expect(onUnavailable).not.toHaveBeenCalled();
+    tuner.start();
+    expect(recorder.start).toHaveBeenCalledTimes(2);
+  });
+
+  it('主动停止后结束回调不会重新占用麦克风', async () => {
+    const { tuner, recorder } = await setup('android');
+    tuner.stop();
+    recorder.stopped();
+    expect(recorder.start).toHaveBeenCalledTimes(1);
+  });
+
+  it('快速重新进入时等待旧停止回调，避免清除新会话', async () => {
+    const { tuner, recorder, workers } = await setup();
+    recorder.autoStop = false;
+    tuner.stop();
+    tuner.start();
+    expect(recorder.start).toHaveBeenCalledTimes(1);
+    recorder.stopped();
+    expect(recorder.start).toHaveBeenCalledTimes(2);
+    expect(workers).toHaveLength(2);
+    expect(workers[1].terminate).not.toHaveBeenCalled();
+    recorder.autoStop = true;
+  });
+
+  it('等待停止期间再次离开会撤销排队的恢复请求', async () => {
+    const { tuner, recorder } = await setup('android');
+    recorder.autoStop = false;
+    tuner.stop();
+    tuner.start();
+    tuner.stop();
+    recorder.stopped();
+    expect(recorder.start).toHaveBeenCalledTimes(1);
+  });
+
+  it('系统中断只在收到结束事件并请求恢复后重启', async () => {
+    const { tuner, recorder, onInterrupted } = await setup('android');
+    recorder.interruptionBegin();
+    expect(onInterrupted).toHaveBeenLastCalledWith(true);
+    expect(recorder.start).toHaveBeenCalledTimes(1);
+    recorder.interruptionEnd();
+    expect(onInterrupted).toHaveBeenLastCalledWith(false);
+    tuner.restartAfterInterruption();
+    expect(recorder.start).toHaveBeenCalledTimes(2);
+  });
+
+  it('停止期间发生错误会开放重试入口，排队恢复不会自动循环启动', async () => {
+    const { tuner, recorder, onUnavailable } = await setup('android');
+    recorder.autoStop = false;
+    tuner.stop();
+    tuner.start();
+    recorder.error({ errMsg: 'stop:fail recorder unavailable' });
+    expect(onUnavailable).toHaveBeenCalledTimes(1);
+    expect(recorder.start).toHaveBeenCalledTimes(1);
+    recorder.autoStop = true;
+    tuner.start();
+    expect(recorder.start).toHaveBeenCalledTimes(2);
+  });
+
+  it('原生停止已失效时不会永久阻塞下一次启动', async () => {
+    const { tuner, recorder } = await setup('android');
+    recorder.stop.mockImplementationOnce(() => { throw new Error('录音已结束'); });
+    tuner.stop();
+    tuner.start();
+    expect(recorder.start).toHaveBeenCalledTimes(2);
+  });
+
   it('iOS 等待线程握手，忙碌期间仅保留最新 PCM，并使用采集时间追踪音高', async () => {
     const { recorder, workers, onPitch } = await setup();
     expect(recorder.start.mock.calls[0][0]).toMatchObject({ frameSize: 1, audioSource: 'buildInMic' });

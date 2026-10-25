@@ -33,14 +33,38 @@ export type Subdivision =
   | 'eighth-rest-note'
   | 'triplet-rest-note-note'
   | 'triplet-note-rest-note'
-  | 'triplet-note-note-rest';
+  | 'triplet-note-note-rest'
+  | 'dotted-eighth-sixteenth'
+  | 'sixteenth-dotted-eighth'
+  | 'eighth-sixteenth-sixteenth'
+  | 'sixteenth-sixteenth-eighth'
+  | 'sixteenth-eighth-sixteenth'
+  | 'eighth-note-rest'
+  | 'sixteenth-rest-note-note-note'
+  | 'eighth-rest-sixteenth-sixteenth'
+  | 'sixteenth-sixteenth-eighth-rest'
+  | 'sixteenth-note-note-rest-note'
+  | 'sixteenth-eighth-rest-sixteenth'
+  | 'sixteenth-rest-note-note-rest';
 
 export const SUBDIVISIONS: readonly Subdivision[] = [
   'quarter',
   'eighth',
   'triplet',
   'sixteenth',
+  'dotted-eighth-sixteenth',
+  'sixteenth-dotted-eighth',
+  'eighth-sixteenth-sixteenth',
+  'sixteenth-sixteenth-eighth',
+  'sixteenth-eighth-sixteenth',
   'eighth-rest-note',
+  'eighth-note-rest',
+  'eighth-rest-sixteenth-sixteenth',
+  'sixteenth-sixteenth-eighth-rest',
+  'sixteenth-rest-note-note-note',
+  'sixteenth-note-note-rest-note',
+  'sixteenth-eighth-rest-sixteenth',
+  'sixteenth-rest-note-note-rest',
   'triplet-rest-note-note',
   'triplet-note-rest-note',
   'triplet-note-note-rest',
@@ -140,6 +164,7 @@ export function partsPerBeat(subdivision: Subdivision): number {
       return 1;
     case 'eighth':
     case 'eighth-rest-note':
+    case 'eighth-note-rest':
       return 2;
     case 'triplet':
     case 'triplet-rest-note-note':
@@ -147,10 +172,25 @@ export function partsPerBeat(subdivision: Subdivision): number {
     case 'triplet-note-note-rest':
       return 3;
     case 'sixteenth':
+    case 'dotted-eighth-sixteenth':
+    case 'sixteenth-dotted-eighth':
+    case 'eighth-sixteenth-sixteenth':
+    case 'sixteenth-sixteenth-eighth':
+    case 'sixteenth-eighth-sixteenth':
+    case 'sixteenth-rest-note-note-note':
+    case 'eighth-rest-sixteenth-sixteenth':
+    case 'sixteenth-sixteenth-eighth-rest':
+    case 'sixteenth-note-note-rest-note':
+    case 'sixteenth-eighth-rest-sixteenth':
+    case 'sixteenth-rest-note-note-rest':
       return 4;
   }
 }
 
+/**
+ * 位图标记不重新发声的等分位置，包含休止和长音延续。
+ * 附点和混合时值共用四等分网格，跳过延音位置后仍保持完整的一拍时长。
+ */
 export function restMask(subdivision: Subdivision): number {
   switch (subdivision) {
     case 'eighth-rest-note':
@@ -161,6 +201,30 @@ export function restMask(subdivision: Subdivision): number {
       return 2;
     case 'triplet-note-note-rest':
       return 4;
+    case 'dotted-eighth-sixteenth':
+      return 6;
+    case 'sixteenth-dotted-eighth':
+      return 12;
+    case 'eighth-sixteenth-sixteenth':
+      return 2;
+    case 'sixteenth-sixteenth-eighth':
+      return 8;
+    case 'sixteenth-eighth-sixteenth':
+      return 4;
+    case 'eighth-note-rest':
+      return 2;
+    case 'sixteenth-rest-note-note-note':
+      return 1;
+    case 'eighth-rest-sixteenth-sixteenth':
+      return 3;
+    case 'sixteenth-sixteenth-eighth-rest':
+      return 12;
+    case 'sixteenth-note-note-rest-note':
+      return 4;
+    case 'sixteenth-eighth-rest-sixteenth':
+      return 6;
+    case 'sixteenth-rest-note-note-rest':
+      return 9;
     default:
       return 0;
   }
@@ -290,6 +354,30 @@ export function subdivisionLabel(subdivision: Subdivision): string {
       return '三连音·中休';
     case 'triplet-note-note-rest':
       return '三连音·尾休';
+    case 'dotted-eighth-sixteenth':
+      return '附点八分＋十六分';
+    case 'sixteenth-dotted-eighth':
+      return '十六分＋附点八分';
+    case 'eighth-sixteenth-sixteenth':
+      return '八分＋十六分＋十六分';
+    case 'sixteenth-sixteenth-eighth':
+      return '十六分＋十六分＋八分';
+    case 'sixteenth-eighth-sixteenth':
+      return '十六分＋八分＋十六分';
+    case 'eighth-note-rest':
+      return '八分音符＋八分休止';
+    case 'sixteenth-rest-note-note-note':
+      return '十六分休止＋三个十六分';
+    case 'eighth-rest-sixteenth-sixteenth':
+      return '八分休止＋两个十六分';
+    case 'sixteenth-sixteenth-eighth-rest':
+      return '两个十六分＋八分休止';
+    case 'sixteenth-note-note-rest-note':
+      return '十六分·音音休音';
+    case 'sixteenth-eighth-rest-sixteenth':
+      return '十六分＋八分休止＋十六分';
+    case 'sixteenth-rest-note-note-rest':
+      return '十六分·休音音休';
   }
 }
 

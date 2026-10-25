@@ -1,12 +1,38 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MetronomeStorageService } from '../../miniprogram/platform/storage-service';
-import { normalizedConfig } from '../../miniprogram/core/metronome/metronome-config';
+import { Subdivision, normalizedConfig } from '../../miniprogram/core/metronome/metronome-config';
 
 afterEach(() => {
   vi.unstubAllGlobals();
 });
 
 describe('MetronomeStorageService', () => {
+  it('新增节奏的统一值和逐拍覆盖可以完整保存恢复', () => {
+    const values = new Map<string, unknown>();
+    vi.stubGlobal('wx', {
+      getStorageSync: (key: string) => values.get(key),
+      setStorageSync: (key: string, value: unknown) => values.set(key, value),
+    });
+    const rhythms: Subdivision[] = [
+      'dotted-eighth-sixteenth', 'sixteenth-dotted-eighth',
+      'eighth-sixteenth-sixteenth', 'sixteenth-sixteenth-eighth',
+      'sixteenth-eighth-sixteenth',
+      'eighth-note-rest', 'sixteenth-rest-note-note-note',
+      'eighth-rest-sixteenth-sixteenth', 'sixteenth-sixteenth-eighth-rest',
+      'sixteenth-note-note-rest-note', 'sixteenth-eighth-rest-sixteenth',
+      'sixteenth-rest-note-note-rest',
+    ];
+    const service = new MetronomeStorageService();
+    for (const subdivision of rhythms) {
+      const config = normalizedConfig({
+        timeSignature: '12/8', subdivision, customSubdivisionEnabled: true,
+        beatSubdivisions: rhythms,
+      });
+      service.saveConfig(config);
+      expect(service.loadConfig()).toEqual(config);
+    }
+  });
+
   it('保存并恢复逐拍细分配置', () => {
     const values = new Map<string, unknown>();
     vi.stubGlobal('wx', {

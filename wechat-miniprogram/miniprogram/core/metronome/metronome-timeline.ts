@@ -50,7 +50,8 @@ export class MetronomeTimeline {
       return;
     }
 
-    const bpmChanged = pending.bpm !== this.config.bpm;
+    const previousBpm = this.config.bpm;
+    const bpmChanged = pending.bpm !== previousBpm;
     const structureChanged = pending.timeSignature !== this.config.timeSignature ||
       pending.subdivision !== this.config.subdivision ||
       pending.customSubdivisionEnabled !== this.config.customSubdivisionEnabled ||
@@ -82,11 +83,14 @@ export class MetronomeTimeline {
     // 旋钮不会把下一拍突然拉回一个完整间隔，也不会积累每次取整误差。
     const oldSpan = this.nextAt - this.previousAt;
     if (oldSpan <= 1e-9) return;
-    const elapsed = Math.min(oldSpan, Math.max(0, currentTime - this.previousAt));
+    // 提前排入的前一拍可能尚未发声，此时必须保留其已确定的起点。
+    const anchor = Math.max(currentTime, this.previousAt);
+    const elapsed = Math.min(oldSpan, anchor - this.previousAt);
     const remainingRatio = 1 - elapsed / oldSpan;
-    const interval = subdivisionDurationSeconds(this.config, this.beatIndex);
-    this.previousAt = currentTime - interval * (1 - remainingRatio);
-    this.nextAt = currentTime + interval * remainingRatio;
+    // 当前间隔可能仍属于上一拍，不能使用下一拍的细分数量重算长度。
+    const interval = oldSpan * previousBpm / pending.bpm;
+    this.previousAt = anchor - interval * (1 - remainingRatio);
+    this.nextAt = anchor + interval * remainingRatio;
   }
 
   discardBefore(time: number): void {
@@ -102,9 +106,11 @@ export class MetronomeTimeline {
     while (this.nextAt < until) {
       const config = this.config;
       const subdivision = subdivisionForBeat(config, this.beatIndex);
+      const beatStrength = config.beatStrengths[this.beatIndex] ?? 'normal';
+      // 整拍静音优先于细分强度，后续等分位置不能重新恢复发声。
       const strength =
-        this.subdivisionIndex === 0
-          ? config.beatStrengths[this.beatIndex] ?? 'normal'
+        beatStrength === 'muted' || this.subdivisionIndex === 0
+          ? beatStrength
           : 'normal';
       ticks.push({
         at: this.nextAt,
